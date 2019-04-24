@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>InfoVis</title>
+  </meta>
+</head>
+<style>
+</style>
+<body>
+
+  <div>Test</div>
+
+<script src="libs/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+
+$(function() {
+  $.ajax({
+    type: 'GET',
+    contentType: 'application/json',
+    url: 'http://localhost:4000/getFoodGroups',
+    success: data => {
+      console.log(data.status);
+    },
+    error: (xhr, status, error) => {
+      console.log(error);
+    },
+  });
+});
+
+
+</script>
+</html>
