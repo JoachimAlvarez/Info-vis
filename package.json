@@ -4,6 +4,7 @@
   "author": "Simon Quartier",
   "dependencies": {
     "body-parser": "^1.5.2",
+    "d3": "^5.9.2",
     "express": "^4.6.1",
     "express-session": "^1.15.6",
     "jquery": "^3.3.1",
