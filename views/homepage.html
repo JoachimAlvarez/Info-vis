@@ -88,12 +88,23 @@ const svg = d3.select('svg')
     .attr('viewBox', `${-width / 2} ${-height / 2} ${width} ${height}`)
     .on('click', () => clickOn()); // Reset zoom on canvas click`
 
+      /*
+  d = {
+    data
+    depth
+    height
+    parent
+    value
+    x0,y1,y0,y1
+  }
+  */
+
 function mouseOver(d) {
-  console.log("over");
+  console.log(d.data.name);
 }
 
 function mouseLeave(d) {
-  console.log("leave")
+ // console.log("leave")
 }
 
 function clickOn(d = { x0: 0, x1: 1, y0: 0, y1: 1 }) {
@@ -134,8 +145,8 @@ function VisualiseData(data) {
 
   const newSlice = slice.enter()
       .append('g').attr('class', 'slice')
-      .on('mouseover', () => mouseOver())
-      .on('mouseleave', () => mouseLeave())
+      .on('mouseover', (d) => mouseOver(d))
+      .on('mouseleave', (d) => mouseLeave(d))
       .on('click', d => {
           d3.event.stopPropagation();
           clickOn(d);
