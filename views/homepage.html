@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-   <!-- <link rel="stylesheet" type="text/css" href="homepage.css"> -->
 	<meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,6 +11,12 @@
   body {
       font-family: Sans-serif;
       font-size: 11px;
+  }
+  div {
+    border-style: solid;
+  }
+  .grid-container {
+    display: grid;
   }
   .slice {
       cursor: pointer;
@@ -28,24 +33,36 @@
       dominant-baseline: middle;
       text-anchor: middle;
   }
+  .breadcrumb {
+    font-weight: bold;
+    display: inline-block;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    border-radius: 5px;
+    counter-reset: flag;
+  }
 </style>
 <body>
-  <div id="main">
-      <div id="sequence"></div>
-      <svg id="svg"></svg>
-  </div>
+
+  <div style="width: 100%; display: table;">
+    <div id="sequence" class="breadcrumb" style="display: table-row;height:10%"></div>
+    <div style="display: table-row;height:90%">
+      <div id="svg-div" style="width: 70%; display: table-cell;"></div>
+      <div style="display: table-cell;" id="info"> </div>
+    </div>
+</div>
+
 </body>
 <script src="libs/jquery/dist/jquery.min.js"></script>
 <script src="libs/d3/d3.js"></script>
-
 <script type="text/javascript">
 
 // -----------------------------------
 // Init constants and helper functions
 
 const formatNumber = d3.format(',d');
-const width = window.innerWidth;
-const height = window.innerHeight;
+const width = $('#svg-div').width();// window.innerWidth;
+const height = window.innerHeight; //$('#svg-div').height();//;
 const radius = (Math.min(width, height) / 2) - 5;
 const x = d3.scaleLinear().range([0, 2 * Math.PI]).clamp(true);
 const y = d3.scaleSqrt().range([radius*.1, radius]);
@@ -56,7 +73,7 @@ const arc = d3.arc()
     .startAngle(d => x(d.x0))
     .endAngle(d => x(d.x1))
     .innerRadius(d => Math.max(0, y(d.y0)))
-    .outerRadius(d => Math.max(0, y(d.y1)));
+    .outerRadius(d => Math.max(0, y(d.y1)))
 
 const middleArcLine = d => {
     const halfPi = Math.PI/2;
@@ -81,29 +98,119 @@ const textFits = d => {
 
 // ---------------------------------------------------------------------
 // This is the Visualisation
-const svg = d3.select('svg')
-    .style('width', '100vw')
-    .style('height', '100vh')
-    .attr('viewBox', `${-width / 2} ${-height / 2} ${width} ${height}`)
-    .on('click', () => clickOn()); // Reset zoom on canvas click`
 
-      /*
-  d = {
-    data
-    depth
-    height
-    parent
-    value
-    x0,y1,y0,y1
+var svg = d3.select("#svg-div").append("svg:svg")
+    .attr("width", width)
+    .attr("height", height)
+    .append("svg:g")
+    .attr("id", "container")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+    .on('click', d => clickOn());
+
+d3.select("#container").on("mouseleave", mouseLeave);
+
+// ---------------------------------------------------------------------
+// Side Information
+
+var Depths = {
+  0: 'Foods',
+  1: 'Food Groups',
+  2: 'Food Subgroups',
+  3: 'Food',
+  4: 'Dishes'
+}
+
+function hasChildren(d) {
+  return (d.data.children);
+}
+
+function clearInformation() {
+  var info_div = $('#info');
+  info_div.empty();
+}
+
+function showFoodInformation(d) {
+
+}
+
+function showDishInformation(d) {
+
+}
+
+function showGroupInformation(d) {
+  clearInformation();
+
+  var info_div = $('#info');
+  var group_name = d.data.name;
+  var group_parent = group_name || d.parent.data.name;
+  var group_children = d.data.children || ""; // Bug that appears until foods are added to the system
+  var val = d.value;
+  var text = document.createTextNode("This is information about group "+group_name+" which has "+group_children.length+" children ");
+  info_div.append(text)
+}
+
+function updateInformation(d) {
+  switch(d.depth) {
+    case 0: showGroupInformation(d); 
+      break;
+    case 1: showGroupInformation(d); 
+      break;
+    case 2: showGroupInformation(d); 
+      break;
+    case 3: showFoodInformation(d); 
+      break;
+    case 4: showDishInformation(d); 
+      break;
+    default: console.log("Error: unhandled depth", d);
   }
-  */
+}
+
+// ---------------------------------------------------------------------
+// Breadcrumbs
+
+function craeteBreadcrumb(node_name) {
+  // TODO create nice element instead of textnode
+  var node = document.createTextNode(node_name);
+  return node
+}
+
+function clearBreadcrumbs() {
+  var seq = $('#sequence');
+  seq.empty();
+}
+
+function updateBreadcrumbs(d) {
+    var seq = $('#sequence');
+    var nodes = getAncestors(d);
+    clearBreadcrumbs();
+    seq.append(document.createTextNode("Foods"));
+    nodes.forEach(node => {
+      seq.append(document.createTextNode("->"));
+      seq.append(craeteBreadcrumb(node));
+    }); 
+}
+
+function getAncestors(node) {
+  var path = [];
+  var current = node;
+  while (current.parent) {
+      path.push(current.data.name);
+      current = current.parent;
+  }
+  return path.reverse();
+}
+
+// -------------------------------------------------
+// UI listeners
 
 function mouseOver(d) {
-  console.log(d.data.name);
+  updateBreadcrumbs(d);
+  updateInformation(d);
 }
 
 function mouseLeave(d) {
- // console.log("leave")
+ clearBreadcrumbs();
+ clearInformation();
 }
 
 function clickOn(d = { x0: 0, x1: 1, y0: 0, y1: 1 }) {
@@ -114,12 +221,61 @@ function clickOn(d = { x0: 0, x1: 1, y0: 0, y1: 1 }) {
             const yd = d3.interpolate(y.domain(), [d.y0, 1]);
             return t => { x.domain(xd(t)); y.domain(yd(t)); };
         });
-    transition.selectAll('path.main-arc')
-        .attrTween('d', d => () => arc(d));
-    transition.selectAll('path.hidden-arc')
-        .attrTween('d', d => () => middleArcLine(d));
-    transition.selectAll('text')
-        .attrTween('display', d => () => textFits(d) ? null : 'none');
+    transition.selectAll('path.main-arc').attrTween('d', d => () => arc(d));
+    transition.selectAll('path.hidden-arc').attrTween('d', d => () => middleArcLine(d));
+    transition.selectAll('text').attrTween('display', d => () => textFits(d) ? null : 'none');
+}
+
+// ----------------------------------------------------------------------
+// Sunburst
+
+function VisualiseData(data) {
+  const root = d3.hierarchy(data)
+      .sum(d => d.size);
+
+  const slice = svg.selectAll('g.slice')
+      .data(partition(root).descendants());
+  slice.exit().remove();
+
+  const newSlice = slice.enter()
+      .append('g').attr('class', 'slice')
+      .on('mouseover', d => mouseOver(d))
+      .on('click', d => {
+          d3.event.stopPropagation();
+          clickOn(d);
+      });
+
+  newSlice.append('title')
+      .text(d => d.data.name + '\n' + formatNumber(d.value));
+  newSlice.append('path')
+      .attr('class', 'main-arc')
+      .style('fill', d => color((d.children ? d : d.parent).data.name)) // todo
+      .attr('d', arc);
+  newSlice.append('path')
+      .attr('class', 'hidden-arc')
+      .attr('id', (_, i) => `hiddenArc${i}`)
+      .attr('d', middleArcLine);
+
+
+  const text = newSlice.append('text')
+      .attr('display', d => textFits(d) ? null : 'none');
+
+  /* This adds the white contour to the text
+  text.append('textPath')
+      .attr('startOffset','50%')
+      .attr('xlink:href', (_, i) => `#hiddenArc${i}` )
+      .text(d => d.data.name)
+      .style('fill', 'none')
+      .style('stroke', '#fff')
+      .style('stroke-width', 5)
+      .style('stroke-linejoin', 'round');
+      */
+
+  // This shows the text
+  text.append('textPath')
+      .attr('startOffset','50%')
+      .attr('xlink:href', (_, i) => `#hiddenArc${i}` )
+      .text(d => d.data.name);
 }
 
 $.ajax({
@@ -133,53 +289,6 @@ $.ajax({
     console.log(error)
   },
 });
-
-function VisualiseData(data) {
-  const root = d3.hierarchy(data)
-      .sum(d => d.size);
-
-  const slice = svg.selectAll('g.slice')
-      .data(partition(root).descendants());
-  slice.exit().remove();
-
-  const newSlice = slice.enter()
-      .append('g').attr('class', 'slice')
-      .on('mouseover', (d) => mouseOver(d))
-      .on('mouseleave', (d) => mouseLeave(d))
-      .on('click', d => {
-          d3.event.stopPropagation();
-          clickOn(d);
-      });
-
-  newSlice.append('title')
-      .text(d => d.data.name + '\n' + formatNumber(d.value));
-  newSlice.append('path')
-      .attr('class', 'main-arc')
-      .style('fill', d => color((d.children ? d : d.parent).data.name))
-      .attr('d', arc);
-  newSlice.append('path')
-      .attr('class', 'hidden-arc')
-      .attr('id', (_, i) => `hiddenArc${i}`)
-      .attr('d', middleArcLine);
-  const text = newSlice.append('text')
-      .attr('display', d => textFits(d) ? null : 'none');
-
-  // This adds the white contour to the text
-  text.append('textPath')
-      .attr('startOffset','50%')
-      .attr('xlink:href', (_, i) => `#hiddenArc${i}` )
-      .text(d => d.data.name)
-      .style('fill', 'none')
-      .style('stroke', '#fff')
-      .style('stroke-width', 5)
-      .style('stroke-linejoin', 'round');
-
-  // This shows the text
-  text.append('textPath')
-      .attr('startOffset','50%')
-      .attr('xlink:href', (_, i) => `#hiddenArc${i}` )
-      .text(d => d.data.name);
-}
 
 </script>
 </html>
