@@ -46,30 +46,33 @@ module.exports = function (app) {
     	else { res.json({status: result}); }
 	});
 
-	app.get('/getFood', (req, res) => {
-		const food_subgroup = req.body.food_subgroup;
+	app.get('/getFood/:food_subgroup', (req, res) => {
+		const food_subgroup = req.params.food_subgroup;
 		let sql = 'select distinct food_id, food_name from tbl_food_dishes where food_subgroup=' + food_subgroup + ';';
+		
 		db.query(sql, (err, result) => {
     		if (err) { res.status(500).send({status: err}); }
-    		else { res.json({status: result[0]}); }
+    		else { res.json({status: result}); }
   		});
 	});
 	
-	app.get('/getDishRoot', (req, res) => {
-		const food_id = req.body.food_id;
+	app.get('/getDishRoot/:food_id', (req, res) => {
+		const food_id = req.params.food_id;
 		let sql = 'select * from tbl_food_dish_category where food_id = ' + food_id + ' and parent_id = 0;';
+		
 		db.query(sql, (err, result) => {
     		if (err) { res.status(500).send({status: err}); }
-    		else { res.json({status: result[0]}); }
+    		else { res.json({status: result}); }
   		});
 	});
 	
-	app.get('/getDishRecur', (req, res) => {
-		const food_id = req.body.food_id;
-		let sql = 'select * from tbl_food_dish_category where parent_id = ' + food_id + ';';
+	app.get('/getDishRecur/:parent_id', (req, res) => {
+		const parent_id = req.params.parent_id;
+		let sql = 'select * from tbl_food_dish_category where parent_id = ' + parent_id + ';';
+		
 		db.query(sql, (err, result) => {
     		if (err) { res.status(500).send({status: err}); }
-    		else { res.json({status: result[0]}); }
+    		else { res.json({status: result}); }
   		});
 	});
 
