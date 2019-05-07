@@ -10,13 +10,7 @@
 <style>
   body {
       font-family: Sans-serif;
-      font-size: 11px;
-  }
-  div {
-    border-style: solid;
-  }
-  .grid-container {
-    display: grid;
+      font-size: 0.75em;
   }
   .slice {
       cursor: pointer;
@@ -35,22 +29,35 @@
   }
   .breadcrumb {
     font-weight: bold;
-    display: inline-block;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
-    overflow: hidden;
-    border-radius: 5px;
-    counter-reset: flag;
+    font-size: 2em;
+  }
+  h1 {
+    font-weight: bold;
+    text-align: center;
+    font-size: 3.5em;
+  }
+  h2 {
+    vertical-align: top;
+    font-weight: bold;
+    text-align: center;
+    font-size: 2em;
+  }
+  p {
+    text-align: left;
   }
 </style>
 <body>
-
-  <div style="width: 100%; display: table;">
-    <div id="sequence" class="breadcrumb" style="display: table-row;height:10%"></div>
-    <div style="display: table-row;height:90%">
-      <div id="svg-div" style="width: 70%; display: table-cell;"></div>
-      <div style="display: table-cell;" id="info"> </div>
-    </div>
+<div><h1>Information Visualisation</h1></div>
+<div id="sequence" class="breadcrumb" style="width: 100%;height: 30px;float: top;"></div>
+<div style="width: 100%;">
+  <div id="svg-div" style="width: 70%;float: left;"></div>
+  <div id="item_info" style="width: 30%;float: right;">
+    <h2 id="item_name"></h2>
+    <div id="info"></div></div>
+  </div>
 </div>
+
+
 
 </body>
 <script src="libs/jquery/dist/jquery.min.js"></script>
@@ -90,7 +97,7 @@ const middleArcLine = d => {
 const textFits = d => {
     const CHAR_SPACE = 6;
     const deltaAngle = x(d.x1) - x(d.x0);
-    const r = Math.max(0, (y(d.y0) + y(d.y1)) / 2);
+    const r = Math.max(0, (y(d.y0) + y(d.y1) +40) / 2); // Changed
     const perimeter = r * deltaAngle;
     return d.data.name.length * CHAR_SPACE < perimeter;
 };
@@ -126,30 +133,67 @@ function hasChildren(d) {
 
 function clearInformation() {
   var info_div = $('#info');
+  let name = $('#item_name');
+  name[0].innerText = "";
+
   info_div.empty();
 }
 
 function showFoodInformation(d) {
+  const name_scientific = d.data.name_scientific;
+  const description = d.data.description || "Description not available";
+  const parent_name = d.parent.data.name;
 
+  var div = document.createElement('div');
+  let html = '';
+  if (name_scientific) {
+    html += '<p style="text-align: center;"><b>Scientific Name:</b> '+name_scientific+'</p>'
+  }
+  html += '<p><b>Parent Group:</b> '+parent_name+'</p>';
+  html += '<p>'+description+'</p>';
+ 
+  div.innerHTML = html;
+
+    
+
+  document.getElementById('info').appendChild(div);
 }
 
 function showDishInformation(d) {
 
 }
 
-function showGroupInformation(d) {
-  clearInformation();
+function getGroups(d) {
+  var group_children = d.data.children;
+  var groupNames = Array.from(group_children(group_children, child => { return child.data.name}));
 
+
+
+  
+}
+
+function showGroupInformation(d) {
   var info_div = $('#info');
   var group_name = d.data.name;
   var group_parent = group_name || d.parent.data.name;
   var group_children = d.data.children || ""; // Bug that appears until foods are added to the system
-  var val = d.value;
-  var text = document.createTextNode("This is information about group "+group_name+" which has "+group_children.length+" children ");
-  info_div.append(text)
+  var groupNames = Array.from(group_children, child => { return child.name});
+
+  var div = document.createElement('div');
+  let html = '<p><b>Number of Subgroups:</b> '+group_children.length+'</p>';
+  html += '<p><b>Subgroups:</b> '+groupNames+'</p>';
+  div.innerHTML = html;
+    
+  document.getElementById('info').appendChild(div);
 }
 
 function updateInformation(d) {
+  clearInformation();
+
+  const name = d.data.name;
+  let name_div = $('#item_name');
+  name_div[0].innerText = name;
+
   switch(d.depth) {
     case 0: showGroupInformation(d); 
       break;
@@ -185,7 +229,7 @@ function updateBreadcrumbs(d) {
     clearBreadcrumbs();
     seq.append(document.createTextNode("Foods"));
     nodes.forEach(node => {
-      seq.append(document.createTextNode("->"));
+      seq.append(document.createTextNode("  >   "));
       seq.append(craeteBreadcrumb(node));
     }); 
 }
@@ -246,7 +290,7 @@ function VisualiseData(data) {
       });
 
   newSlice.append('title')
-      .text(d => d.data.name + '\n' + formatNumber(d.value));
+      .text(d => d.data.name);
   newSlice.append('path')
       .attr('class', 'main-arc')
       .style('fill', d => color((d.children ? d : d.parent).data.name)) // todo
@@ -257,25 +301,57 @@ function VisualiseData(data) {
       .attr('d', middleArcLine);
 
 
-  const text = newSlice.append('text')
-      .attr('display', d => textFits(d) ? null : 'none');
 
-  /* This adds the white contour to the text
-  text.append('textPath')
-      .attr('startOffset','50%')
-      .attr('xlink:href', (_, i) => `#hiddenArc${i}` )
-      .text(d => d.data.name)
-      .style('fill', 'none')
-      .style('stroke', '#fff')
-      .style('stroke-width', 5)
-      .style('stroke-linejoin', 'round');
-      */
+//  const text = newSlice.append('text')
+  //    .attr('display', d => textFits(d) ? null : 'none');
+
+  const text = newSlice.append('text')
+      .attr('display', d => {
+        var name = d.data.name;
+        var words = name.split(' ');
+        var fit = true;
+
+        for (var i = 0; i < words.length; i++) {
+          (words[i].length < 6) ? '' : (fit = false);
+        }
+        return fit;
+      });
+
 
   // This shows the text
   text.append('textPath')
       .attr('startOffset','50%')
-      .attr('xlink:href', (_, i) => `#hiddenArc${i}` )
-      .text(d => d.data.name);
+      .attr('xlink:href', (_, i) => `#hiddenArc${i}`)
+      .text(d=> {
+        var name = d.data.name;
+        var words = name.split(' ');
+        if (words.length = 1) {
+          return name;
+        }
+        else {
+          var el = d3.select(this);
+        }
+
+        
+      })
+
+     // .attr('x', 0).attr('dy', '15')
+ //     .text(d => d.data.name)
+
+  var insertLinebreaks = function (d) {
+    var el = d3.select(this);
+    var words = d.split(' ');
+    el.text('');
+
+    for (var i = 0; i < words.length; i++) {
+        var tspan = el.append('tspan').text(words[i]);
+        if (i > 0)
+            tspan.attr('x', 0).attr('dy', '15');
+    }
+};
+
+
+
 }
 
 $.ajax({
