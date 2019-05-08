@@ -27,6 +27,9 @@
       dominant-baseline: middle;
       text-anchor: middle;
   }
+  .breadcrumbs {
+    border: 1px;
+  }
   .breadcrumb {
     font-weight: bold;
     font-size: 2em;
@@ -48,28 +51,64 @@
 </style>
 <body>
 <div><h1>Information Visualisation</h1></div>
-<div id="sequence" class="breadcrumb" style="width: 100%;height: 30px;float: top;"></div>
-<div style="width: 100%;">
+<div id="sequence" class="breadcrumbs" style="width: 100%;height: 30px;float: top;"></div>
+<div style="height: 80%;float: bottom;">
   <div id="svg-div" style="width: 70%;float: left;"></div>
-  <div id="item_info" style="width: 30%;float: right;">
-    <h2 id="item_name"></h2>
-    <div id="info"></div></div>
+  <div id="sidebar" style="width: 30%;float: right;">
+    <div id="item_info" style="float:top">
+      <h2 id="item_name"></h2>
+      <div id="info"></div>
+    </div>
+    <div id="legenda" style="float: right;float:bottom;position:fixed">
+      <h2 id="d"></h2>
+    </div>
   </div>
 </div>
-
-
-
 </body>
 <script src="libs/jquery/dist/jquery.min.js"></script>
 <script src="libs/d3/d3.js"></script>
 <script type="text/javascript">
+
+// ----------------------------------
+// Color Blindness
+
+// Saturation (low->high: high->low scores)
+// white as neutral
+
+const COLOR_BLIND_GRADE_COLORS = []; // ? -> yellow -> white -> ??? -> licht brown
+const NORMAL_GRADE_COLORS = []; // green -> yellow -> blue/white -> purple -> red
+
+const COLORS = []; // Light-saturation colors
+const COLOR_BLIND_COLORS = [];
+
+const colors = NORMAL_GRADE_COLORS;
+
+const DEPTH = 4;
+
+// not, part, full
+let COLOR_BLIND = false;
+
+function setColorBlind(colorblind, grades) {
+  COLOR_BLIND = colorblind;
+  if (grades) {
+    (colorblind) ? (colors = COLOR_BLIND_GRADE_COLORS) : (colors = NORMAL_GRADE_COLORS);
+  }
+  else {
+
+  }
+}
+
+function getColor(grade=false) {
+
+}
+
 
 // -----------------------------------
 // Init constants and helper functions
 
 const formatNumber = d3.format(',d');
 const width = $('#svg-div').width();// window.innerWidth;
-const height = window.innerHeight; //$('#svg-div').height();//;
+const height = (window.innerHeight *80 /100); //$('#svg-div').height();//;
 const radius = (Math.min(width, height) / 2) - 5;
 const x = d3.scaleLinear().range([0, 2 * Math.PI]).clamp(true);
 const y = d3.scaleSqrt().range([radius*.1, radius]);
@@ -112,32 +151,14 @@ var svg = d3.select("#svg-div").append("svg:svg")
     .append("svg:g")
     .attr("id", "container")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
-    .on('click', d => clickOn());
+    .on('click', clickOn);
 
-d3.select("#container").on("mouseleave", mouseLeave);
+d3.select("#container").on("mouseleave", d => mouseLeave(d, true));
 
 // ---------------------------------------------------------------------
 // Side Information
 
-var Depths = {
-  0: 'Foods',
-  1: 'Food Groups',
-  2: 'Food Subgroups',
-  3: 'Food',
-  4: 'Dishes'
-}
-
-function hasChildren(d) {
-  return (d.data.children);
-}
-
-function clearInformation() {
-  var info_div = $('#info');
-  let name = $('#item_name');
-  name[0].innerText = "";
-
-  info_div.empty();
-}
+var Depths = { 0: 'Foods', 1: 'Food Groups', 2: 'Food Subgroups', 3: 'Food'}
 
 function showFoodInformation(d) {
   const name_scientific = d.data.name_scientific;
@@ -151,10 +172,7 @@ function showFoodInformation(d) {
   }
   html += '<p><b>Parent Group:</b> '+parent_name+'</p>';
   html += '<p>'+description+'</p>';
- 
   div.innerHTML = html;
-
-    
 
   document.getElementById('info').appendChild(div);
 }
@@ -176,19 +194,36 @@ function showGroupInformation(d) {
   var info_div = $('#info');
   var group_name = d.data.name;
   var group_parent = group_name || d.parent.data.name;
+  var grade = d.data.grade;
   var group_children = d.data.children || ""; // Bug that appears until foods are added to the system
   var groupNames = Array.from(group_children, child => { return child.name});
 
   var div = document.createElement('div');
   let html = '<p><b>Number of Subgroups:</b> '+group_children.length+'</p>';
   html += '<p><b>Subgroups:</b> '+groupNames+'</p>';
+  if (grade) {
+    html += '<p><b>Grade:</b> '+grade+'</p>';
+  }
   div.innerHTML = html;
+
+
     
   document.getElementById('info').appendChild(div);
 }
 
+function clearInformation(d) {
+  var info_div = $('#info');
+  let name = $('#item_name');
+  
+  if (d.depth === DEPTH) {
+    name[0].innerText = "";
+  }
+
+  info_div.empty();
+}
+
 function updateInformation(d) {
-  clearInformation();
+  clearInformation(d);
 
   const name = d.data.name;
   let name_div = $('#item_name');
@@ -210,51 +245,69 @@ function updateInformation(d) {
 }
 
 // ---------------------------------------------------------------------
-// Breadcrumbs
+// Clickable Breadcrumbs
 
-function craeteBreadcrumb(node_name) {
-  // TODO create nice element instead of textnode
-  var node = document.createTextNode(node_name);
-  return node
-}
-
-function clearBreadcrumbs() {
-  var seq = $('#sequence');
-  seq.empty();
-}
+function clearBreadCrumbs() {
+  d3.select('.breadcrumbs').selectAll('.breadcrumb').remove();
+};
 
 function updateBreadcrumbs(d) {
-    var seq = $('#sequence');
-    var nodes = getAncestors(d);
-    clearBreadcrumbs();
-    seq.append(document.createTextNode("Foods"));
-    nodes.forEach(node => {
-      seq.append(document.createTextNode("  >   "));
-      seq.append(craeteBreadcrumb(node));
-    }); 
+    clearBreadCrumbs();
+
+    const crumbContainer = d3.select('.breadcrumbs');
+    const anc = getAncestors(d);
+
+    // Add First: 'Foods'
+    crumbContainer.append('span')
+        .classed('breadcrumb', true)
+        .text(anc[0].data.name)
+        .on("click", (_, a ,f) => { clickOn(anc[0]) });
+
+    // add rest
+    for (i = 1; i < anc.length; i++) {
+      const n = anc[i];
+      crumbContainer.append('span')
+        .classed('breadcrumb', true)
+        .text("  >  "+n.data.name)
+        .on("click", (_, a ,f) => { clickOn(n) });
+    } 
 }
 
 function getAncestors(node) {
   var path = [];
   var current = node;
   while (current.parent) {
-      path.push(current.data.name);
-      current = current.parent;
+    path.push(current);
+    current = current.parent;
   }
-  return path.reverse();
+  path.push(current)
+  path.reverse();
+  return path;
 }
 
-// -------------------------------------------------
+// ---------------------------------------------------------------------
+// Opacity
+
+function setOpacity(d, op) {
+  var sequenceArray = getAncestors(d);
+  d3.selectAll("path").style("opacity", op);
+  svg.selectAll("path")
+      .filter(node => { return (sequenceArray.indexOf(node) >= 0)})
+      .style("opacity", 1);
+
+}
+
+// ---------------------------------------------------------------------
 // UI listeners
 
 function mouseOver(d) {
   updateBreadcrumbs(d);
   updateInformation(d);
+  setOpacity(d, 0.3);
 }
 
-function mouseLeave(d) {
- clearBreadcrumbs();
- clearInformation();
+function mouseLeave(d, segment=false) { 
+
 }
 
 function clickOn(d = { x0: 0, x1: 1, y0: 0, y1: 1 }) {
@@ -283,11 +336,8 @@ function VisualiseData(data) {
 
   const newSlice = slice.enter()
       .append('g').attr('class', 'slice')
-      .on('mouseover', d => mouseOver(d))
-      .on('click', d => {
-          d3.event.stopPropagation();
-          clickOn(d);
-      });
+      .on('mouseover', mouseOver)
+      .on('click', d => { d3.event.stopPropagation(); clickOn(d) });
 
   newSlice.append('title')
       .text(d => d.data.name);
@@ -299,12 +349,15 @@ function VisualiseData(data) {
       .attr('class', 'hidden-arc')
       .attr('id', (_, i) => `hiddenArc${i}`)
       .attr('d', middleArcLine);
+/*
+.attr("display", function(d) {
+        return d.depth ? null : "none";
+})
+*/
 
-
-
-//  const text = newSlice.append('text')
-  //    .attr('display', d => textFits(d) ? null : 'none');
-
+  const text = newSlice.append('text')
+      .attr('display', d => textFits(d) ? null : 'none');
+/*
   const text = newSlice.append('text')
       .attr('display', d => {
         var name = d.data.name;
@@ -316,27 +369,37 @@ function VisualiseData(data) {
         }
         return fit;
       });
-
-
+*/
+/*
   // This shows the text
   text.append('textPath')
       .attr('startOffset','50%')
       .attr('xlink:href', (_, i) => `#hiddenArc${i}`)
-      .text(d=> {
+      .text(d=> d.data.name);
+      */
+  text.append('textPath')
+      .attr('startOffset','50%')
+      .attr('xlink:href', (_, i) => `#hiddenArc${i}`)
+      .text(d => {
         var name = d.data.name;
         var words = name.split(' ');
-        if (words.length = 1) {
+        return name;
+       /* 
+        if (words.length === 1) {
           return name;
         }
         else {
-          var el = d3.select(this);
+          return words[0];
+          for (var i = 0; i < words.length; i++) {
+         //   var tspan = text.append('tspan').text(words[i]);
+            if (i > 0) {}
+           //   tspan.attr('x', 0).attr('dy', '15');
+          }
         }
-
+*/
         
-      })
-
-     // .attr('x', 0).attr('dy', '15')
- //     .text(d => d.data.name)
+      });
+      
 
   var insertLinebreaks = function (d) {
     var el = d3.select(this);
@@ -353,6 +416,8 @@ function VisualiseData(data) {
 
 
 }
+// ---------------------------------------------------------------------
+// Fetch the data and show the visualisation
 
 $.ajax({
   type: 'GET',
