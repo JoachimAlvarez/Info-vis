@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	<meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -27,17 +28,11 @@
       dominant-baseline: middle;
       text-anchor: middle;
   }
-  .breadcrumbs {
-    border: 1px;
-  }
+  .breadcrumbs {}
   .breadcrumb {
     font-weight: bold;
     font-size: 2em;
-  }
-  h1 {
-    font-weight: bold;
-    text-align: center;
-    font-size: 3.5em;
+    cursor: pointer;
   }
   h2 {
     vertical-align: top;
@@ -48,19 +43,97 @@
   p {
     text-align: left;
   }
+  .sidebar {
+    position: relative;
+    float: right;
+    width: 30%;
+  }
+  .item_info {
+    width: 100%;
+    clear: both;
+    display: block;
+    height: 350px;
+    overflow:scroll;
+  }
+  .legenda {
+    width: 100%;
+    clear: both;
+    height: 60px;
+    display: inline-block;
+  }
+  .columnNav {
+   float: left;
+   width: 20%;
+   height: 60px;
+   vertical-align: middle;
+  }
+  .columnTitle {
+   float: left;
+   width: 60%;
+   height: 60px;
+   font-weight: bold;
+    text-align: center;
+    font-size: 3em;
+  }
+  .row {
+    width: 100%;
+    height: 60px;
+    vertical-align: middle;
+  }
+  .columnNav input[type=text] {
+  padding: 5px;
+  margin-top: 20px;
+  font-size: 17px;
+  border: 1px solid gray;
+}
+  .columnNav button {
+  float: right;
+  padding: 6px 10px;
+  margin-top: 20px;
+  margin-right: 15px;
+  background: #ddd;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+}
+  .columnNav button:hover {
+  background: #ccc;
+}
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
 </style>
 <body>
-<div><h1>Information Visualisation</h1></div>
-<div id="sequence" class="breadcrumbs" style="width: 100%;height: 30px;float: top;"></div>
+
+<div class="row">
+  <div class="columnNav">
+    <form id='search'>
+      <input type="text" placeholder="Search for Food(Group).." name="search">
+      <button><i class="fa fa-search"></i></button>
+    </form>
+  </div>
+  <h1 class="columnTitle" style="float: center;">Information Visualisation</h1>
+  <button id='colorBlindBtn' class="columnNav" style="float: right;" >Color Blind Mode</button> 
+</div>
+<div id="sequence" class="breadcrumbs" style="float: left;width: 99%;height: 30px"></div>
 <div style="height: 80%;float: bottom;">
   <div id="svg-div" style="width: 70%;float: left;"></div>
-  <div id="sidebar" style="width: 30%;float: right;">
-    <div id="item_info" style="float:top">
+  <div id="sidebar" class='sidebar'>
+    <div id="item_info" class='item_info'>
       <h2 id="item_name"></h2>
       <div id="info"></div>
     </div>
-    <div id="legenda" style="float: right;float:bottom;position:fixed">
-      <h2 id="d"></h2>
+    <div id="legenda" class="legenda">
+      <h2 id="d">Instructions</h2>
     </div>
   </div>
 </div>
@@ -72,36 +145,59 @@
 // ----------------------------------
 // Color Blindness
 
-// Saturation (low->high: high->low scores)
-// white as neutral
+let COLOR_BLIND_MODE = false;
+let COLOR_BLIND_COLORS = ['#a50f15', '#de2d26', '#fb6a4a', '#cfae91', '#08519c', '#3182db', '#6baed6', '#636363', '#969696', '#cccccc'];
+let color = d3.scaleOrdinal(d3.schemeCategory10);
 
-const COLOR_BLIND_GRADE_COLORS = []; // ? -> yellow -> white -> ??? -> licht brown
-const NORMAL_GRADE_COLORS = []; // green -> yellow -> blue/white -> purple -> red
+$('#colorBlindBtn').on('click',e => {
+  if (COLOR_BLIND_MODE) {
+    COLOR_BLIND_MODE = false;
+    $('#colorBlindBtn').text("Color Blind Mode");
+    color = d3.scaleOrdinal(d3.schemeCategory10);
+    redraw();
+  } 
+  else { 
+    COLOR_BLIND_MODE = true;
+    $('#colorBlindBtn').text("Leave Color Blind Mode");
+    color = d3.scaleOrdinal(COLOR_BLIND_COLORS);
+    redraw();
+  }
+});
 
-const COLORS = []; // Light-saturation colors
-const COLOR_BLIND_COLORS = [];
+function redraw() {
+  $("#svg-div").empty();
+  svg = d3.select("#svg-div").append("svg:svg")
+    .attr("width", width)
+    .attr("height", height)
+    .append("svg:g")
+    .attr("id", "container")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+    .on('click', clickOn);
+  VisualiseData(DATA);
+}
 
-const colors = NORMAL_GRADE_COLORS;
+// ----------------------------------
+// Search
 
-const DEPTH = 4;
-
-// not, part, full
-let COLOR_BLIND = false;
-
-function setColorBlind(colorblind, grades) {
-  COLOR_BLIND = colorblind;
-  if (grades) {
-    (colorblind) ? (colors = COLOR_BLIND_GRADE_COLORS) : (colors = NORMAL_GRADE_COLORS);
+$('#search').submit(e => {
+  const name = e.currentTarget[0].value;
+  var d = false;
+  svg.selectAll("path")
+      .filter(node => {
+        if (node.data.name === name) {
+          d = node;
+        }
+      });
+  if (d) {
+    updateInformation(d);
+    updateBreadcrumbs(d);
+    setOpacity(d, 0.3);
   }
   else {
-
+    console.log("Bestaat niet")
   }
-}
-
-function getColor(grade=false) {
-
-}
-
+  e.preventDefault();
+});
 
 // -----------------------------------
 // Init constants and helper functions
@@ -112,7 +208,6 @@ const height = (window.innerHeight *80 /100); //$('#svg-div').height();//;
 const radius = (Math.min(width, height) / 2) - 5;
 const x = d3.scaleLinear().range([0, 2 * Math.PI]).clamp(true);
 const y = d3.scaleSqrt().range([radius*.1, radius]);
-const color = d3.scaleOrdinal(d3.schemeCategory10);
 const partition = d3.partition();
 
 const arc = d3.arc()
@@ -159,6 +254,7 @@ d3.select("#container").on("mouseleave", d => mouseLeave(d, true));
 // Side Information
 
 var Depths = { 0: 'Foods', 1: 'Food Groups', 2: 'Food Subgroups', 3: 'Food'}
+const DEPTH = Object.keys(Depths).length;
 
 function showFoodInformation(d) {
   const name_scientific = d.data.name_scientific;
@@ -170,7 +266,12 @@ function showFoodInformation(d) {
   if (name_scientific) {
     html += '<p style="text-align: center;"><b>Scientific Name:</b> '+name_scientific+'</p>'
   }
-  html += '<p><b>Parent Group:</b> '+parent_name+'</p>';
+  let parentspan = $('<span />');
+  parentspan.text(parent_name); //<span onclick='+clickOn()+'>'+parent_name+'</span>;
+ // parentspan.on('click', clickOn(d.parent));
+ // console.log(parentspan)
+  html += '<p><b>Parent Group: </b>'+parent_name+'</p>';
+//  html += parentspan[0];
   html += '<p>'+description+'</p>';
   div.innerHTML = html;
 
@@ -181,29 +282,21 @@ function showDishInformation(d) {
 
 }
 
-function getGroups(d) {
-  var group_children = d.data.children;
-  var groupNames = Array.from(group_children(group_children, child => { return child.data.name}));
-
-
-
-  
-}
-
 function showGroupInformation(d) {
   var info_div = $('#info');
   var group_name = d.data.name;
   var group_parent = group_name || d.parent.data.name;
   var grade = d.data.grade;
   var group_children = d.data.children || ""; // Bug that appears until foods are added to the system
-  var groupNames = Array.from(group_children, child => { return child.name});
+  var str = "";
+  group_children.forEach(child => { str = str + child.name + ', ' });
+  str = str.substring(0, str.length - 2);
 
   var div = document.createElement('div');
-  let html = '<p><b>Number of Subgroups:</b> '+group_children.length+'</p>';
-  html += '<p><b>Subgroups:</b> '+groupNames+'</p>';
+  let html = '<p><b>Here you can find the following Subgroups such as :</b> '+str+'</p>';
   if (grade) {
     html += '<p><b>Grade:</b> '+grade+'</p>';
-  }
+  }''
   div.innerHTML = html;
 
 
@@ -294,7 +387,6 @@ function setOpacity(d, op) {
   svg.selectAll("path")
       .filter(node => { return (sequenceArray.indexOf(node) >= 0)})
       .style("opacity", 1);
-
 }
 
 // ---------------------------------------------------------------------
@@ -349,81 +441,24 @@ function VisualiseData(data) {
       .attr('class', 'hidden-arc')
       .attr('id', (_, i) => `hiddenArc${i}`)
       .attr('d', middleArcLine);
-/*
-.attr("display", function(d) {
-        return d.depth ? null : "none";
-})
-*/
 
   const text = newSlice.append('text')
       .attr('display', d => textFits(d) ? null : 'none');
-/*
-  const text = newSlice.append('text')
-      .attr('display', d => {
-        var name = d.data.name;
-        var words = name.split(' ');
-        var fit = true;
-
-        for (var i = 0; i < words.length; i++) {
-          (words[i].length < 6) ? '' : (fit = false);
-        }
-        return fit;
-      });
-*/
-/*
-  // This shows the text
   text.append('textPath')
       .attr('startOffset','50%')
       .attr('xlink:href', (_, i) => `#hiddenArc${i}`)
-      .text(d=> d.data.name);
-      */
-  text.append('textPath')
-      .attr('startOffset','50%')
-      .attr('xlink:href', (_, i) => `#hiddenArc${i}`)
-      .text(d => {
-        var name = d.data.name;
-        var words = name.split(' ');
-        return name;
-       /* 
-        if (words.length === 1) {
-          return name;
-        }
-        else {
-          return words[0];
-          for (var i = 0; i < words.length; i++) {
-         //   var tspan = text.append('tspan').text(words[i]);
-            if (i > 0) {}
-           //   tspan.attr('x', 0).attr('dy', '15');
-          }
-        }
-*/
-        
-      });
-      
-
-  var insertLinebreaks = function (d) {
-    var el = d3.select(this);
-    var words = d.split(' ');
-    el.text('');
-
-    for (var i = 0; i < words.length; i++) {
-        var tspan = el.append('tspan').text(words[i]);
-        if (i > 0)
-            tspan.attr('x', 0).attr('dy', '15');
-    }
-};
-
-
-
+      .text(d => d.data.name);
 }
 // ---------------------------------------------------------------------
 // Fetch the data and show the visualisation
+let DATA = {};
 
 $.ajax({
   type: 'GET',
   contentType: 'application/json',
   url: 'http://localhost:4000/getFoodGroups',
   success: data => {
+    DATA = data.status;
     VisualiseData(data.status)
   },
   error: (xhr, status, error) => {
