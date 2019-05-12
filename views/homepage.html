@@ -205,12 +205,14 @@ $('#search').submit(e => {
         }
       });
   if (d) {
+    var home = svg.selectAll("path")._groups[0][0].__data__;
+    clickOn(home);
     updateInformation(d);
     updateBreadcrumbs(d);
-    setOpacity(d, 0.3);
+    setOpacity(d, 0.2);
   }
   else {
-    console.log("Bestaat niet")
+    alert("This item does not exist, please pick one from the list");
   }
   e.preventDefault();
 });
@@ -427,6 +429,7 @@ function mouseLeave(d, segment=false) {
 }
 
 function clickOn(d = { x0: 0, x1: 1, y0: 0, y1: 1 }) {
+  //console.log(d)
     const transition = svg.transition()
         .duration(750)
         .tween('scale', () => {
