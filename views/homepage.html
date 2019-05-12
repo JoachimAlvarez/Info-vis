@@ -81,11 +81,15 @@
     vertical-align: middle;
   }
   .columnNav input[type=text] {
-  padding: 5px;
-  margin-top: 20px;
-  font-size: 17px;
-  border: 1px solid gray;
-}
+   padding: 5px;
+   margin-top: 20px;
+   font-size: 17px;
+   border: 1px solid gray;
+  }
+  .columnNavRadio {
+     padding: 30px;
+     font-size: 17px;
+  }
   .columnNav button {
   float: right;
   padding: 6px 10px;
@@ -116,15 +120,25 @@
 
 <div class="row">
   <div class="columnNav">
+  <!--  <select id="combobox"></select>-->
+
     <form id='search'>
-      <input type="text" placeholder="Search for Food(Group).." name="search">
+      <input id='searchInput' list="datalist" aria-autocomplete="options" type="text" placeholder="Search for Food(Group).." name="search">
+      <datalist id="datalist"></datalist>
       <button><i class="fa fa-search"></i></button>
     </form>
+
   </div>
   <h1 class="columnTitle" style="float: center;">Information Visualisation</h1>
-  <button id='colorBlindBtn' class="columnNav" style="float: right;" >Color Blind Mode</button> 
+  <div id="colorBlindForm" class='columnNavRadio'>
+    <label>Color Blind Mode: </label>
+    <input type="radio" name="radioName" value="true" /> On 
+    <input type="radio" name="radioName" value="false" checked/> Off 
+  </div>
 </div>
+
 <div id="sequence" class="breadcrumbs" style="float: left;width: 99%;height: 30px"></div>
+
 <div style="height: 80%;float: bottom;">
   <div id="svg-div" style="width: 70%;float: left;"></div>
   <div id="sidebar" class='sidebar'>
@@ -137,8 +151,10 @@
     </div>
   </div>
 </div>
+
 </body>
 <script src="libs/jquery/dist/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script src="libs/d3/d3.js"></script>
 <script type="text/javascript">
 
@@ -149,19 +165,17 @@ let COLOR_BLIND_MODE = false;
 let COLOR_BLIND_COLORS = ['#a50f15', '#de2d26', '#fb6a4a', '#cfae91', '#08519c', '#3182db', '#6baed6', '#636363', '#969696', '#cccccc'];
 let color = d3.scaleOrdinal(d3.schemeCategory10);
 
-$('#colorBlindBtn').on('click',e => {
-  if (COLOR_BLIND_MODE) {
-    COLOR_BLIND_MODE = false;
-    $('#colorBlindBtn').text("Color Blind Mode");
-    color = d3.scaleOrdinal(d3.schemeCategory10);
-    redraw();
-  } 
-  else { 
+$("input[type='radio']").change(function() {
+  const val = $(this).val()
+  if (val === 'true') {
     COLOR_BLIND_MODE = true;
-    $('#colorBlindBtn').text("Leave Color Blind Mode");
     color = d3.scaleOrdinal(COLOR_BLIND_COLORS);
-    redraw();
   }
+  else {
+    COLOR_BLIND_MODE = false;
+    color = d3.scaleOrdinal(d3.schemeCategory10);
+  }
+  redraw();
 });
 
 function redraw() {
@@ -178,6 +192,8 @@ function redraw() {
 
 // ----------------------------------
 // Search
+
+let NAMES = [];
 
 $('#search').submit(e => {
   const name = e.currentTarget[0].value;
@@ -198,6 +214,14 @@ $('#search').submit(e => {
   }
   e.preventDefault();
 });
+
+function InitialiseAutocomplete(names) {
+  var datalist = $('#datalist');
+  names.forEach(name => {
+    const option = '<option value="'+name+'"">';
+    datalist.append(option)
+  })
+}
 
 // -----------------------------------
 // Init constants and helper functions
@@ -451,6 +475,7 @@ function VisualiseData(data) {
 }
 // ---------------------------------------------------------------------
 // Fetch the data and show the visualisation
+
 let DATA = {};
 
 $.ajax({
@@ -458,8 +483,9 @@ $.ajax({
   contentType: 'application/json',
   url: 'http://localhost:4000/getFoodGroups',
   success: data => {
-    DATA = data.status;
-    VisualiseData(data.status)
+    DATA = data.json;
+    InitialiseAutocomplete(data.names);
+    VisualiseData(DATA);
   },
   error: (xhr, status, error) => {
     console.log(error)
