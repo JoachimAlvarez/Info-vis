@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.css">
 	<meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -85,35 +85,26 @@
    margin-top: 20px;
    font-size: 17px;
    border: 1px solid gray;
+   margin-left: 20px;
+   float:left;
   }
   .columnNavRadio {
-     padding: 30px;
+     padding: 35px;
      font-size: 17px;
   }
   .columnNav button {
   float: right;
   padding: 6px 10px;
-  margin-top: 20px;
-  margin-right: 15px;
   background: #ddd;
+  margin-left: -20px;
+  margin-top: 19px;
   font-size: 18px;
   border: none;
   cursor: pointer;
+  float:left;
 }
-  .columnNav button:hover {
+.columnNav button:hover {
   background: #ccc;
-}
-.modal {
-  display: none; /* Hidden by default */
-  position: fixed; /* Stay in place */
-  z-index: 1; /* Sit on top */
-  left: 0;
-  top: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  overflow: auto; /* Enable scroll if needed */
-  background-color: rgb(0,0,0); /* Fallback color */
-  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
 }
 </style>
 <body>
@@ -124,8 +115,8 @@
 
     <form id='search'>
       <input id='searchInput' list="datalist" aria-autocomplete="options" type="text" placeholder="Search for Food(Group).." name="search">
-      <datalist id="datalist"></datalist>
       <button><i class="fa fa-search"></i></button>
+      <datalist id="datalist"></datalist>
     </form>
 
   </div>
@@ -148,6 +139,13 @@
     </div>
     <div id="legenda" class="legenda">
       <h2 id="d">Instructions</h2>
+      <p style="text-align: center;"> (hover over the instructions to see them in action)</p>
+      <p id="backInstr">  <b style="font-size: 1.25em;">Back:</b> <i style="font-size: 1.25em;">Click</i> at the center of the Visualisation</p>
+      <p id="selectInstr"><b style="font-size: 1.25em;">Click/See:</b> <i style="font-size: 1.25em;">Hover</i> on the slice of the Visualisation. <i style="font-size: 1.25em;">Click</i> to go through</p>
+      <h2 id="instr" style="text-align: center;">Current Action</h2>
+        <p style="font-size: 1.25em;"> <b>Click: </b><span id="click_action"></span></p>
+        <p style="font-size: 1.25em;"> <b>Hover: </b><span id="hover_action"></span></p>
+      </p>
     </div>
   </div>
 </div>
@@ -159,21 +157,138 @@
 <script type="text/javascript">
 
 // ----------------------------------
+// Instructions
+
+let instr_busy = false;
+
+function updateCurrentAction(d) {
+  var name = d.data.name;
+  $('#hover_action').text('see information about: '+name);
+  if ((CURRENT_DEPTH-1) === d.depth) {
+    $('#click_action').text('go Back to '+name);
+  }
+  else {
+    $('#click_action').text('see subgroups of '+name);
+  }
+  
+
+  var str_hover = "HOVER here to see information about: "+name;
+  var str_subgroups = "";
+  //var group_children = d.data.children;
+  //group_children.forEach(child => { str_subgroups = str_subgroups + child.name + ', ' });
+  var str_click = "CLICK here to see information about: "+str_subgroups
+  $('#curr_actions').append(d.data.name);
+}
+
+function blinkHome(blink) {
+  if (blink) {
+    if (CURRENT_DEPTH === 0) {
+      center.attr('fill', 'white');
+    }
+    else {
+      setOpacity(CURRENT_D.parent, 1, 0.2);
+    }
+  }
+  else {
+    if (CURRENT_DEPTH === 0) {
+      center.attr('fill', 'black');
+    }
+    else {
+      setOpacity(CURRENT_D.parent, 0.2, 0.2);
+    }
+  }
+}
+
+
+$('#backInstr').on('mouseover', e => {
+  if (!instr_busy) {
+    d3.selectAll("path").style("opacity", 0.2);
+    instr_busy = true;
+  //  d3.selectAll("path").style("opacity", 0.2);
+    setTimeout(() => {
+       blinkHome(true);
+       setTimeout(() => {
+        blinkHome(false);
+        setTimeout(() => {
+          blinkHome(true);
+          setTimeout(() => {
+            blinkHome(false);
+            setTimeout(() => {
+              blinkHome(true);
+              setTimeout(() => {
+                blinkHome(false);
+              //  d3.selectAll("path").style("opacity", 1);
+                clickOn(CURRENT_D.parent)
+                updateBreadcrumbs(CURRENT_D);
+                updateInformation(CURRENT_D);
+                setOpacity(CURRENT_D, 1, 0.2);
+                instr_busy = false;
+              }, 1000);
+            }, 500);
+          }, 500);
+        }, 500);
+      }, 500);
+    }, 500);
+  }
+});
+
+function blinkGroup(blink, child) {
+  if (blink) {
+    setOpacity(child, 1, 0.2);
+  }
+  else {
+    setOpacity(child, 0.2, 0.2);
+  }
+}
+
+$('#selectInstr').on('mouseover', e => {
+  if (!instr_busy) {
+    if (CURRENT_D.children) {
+      const child = CURRENT_D.children[1];
+      instr_busy = true;
+    
+      d3.selectAll("path").style("opacity", 0.2);
+      setTimeout(() => {
+        blinkGroup(true, child);
+        setTimeout(() => {
+          blinkGroup(false, child);
+          setTimeout(() => {
+            blinkGroup(true, child);
+            setTimeout(() => {
+              clickOn(child)
+              if (CURRENT_D) {
+                updateBreadcrumbs(CURRENT_D);
+                updateInformation(CURRENT_D);
+              }
+              instr_busy = false
+            }, 1000);
+          }, 500);
+        }, 500);
+      }, 500);
+    }
+    else {
+      alert('You are at maximum depth, you cannot go deeper in the visualisation');
+    }
+  }
+});
+
+// ----------------------------------
 // Color Blindness
 
 let COLOR_BLIND_MODE = false;
-let COLOR_BLIND_COLORS = ['#a50f15', '#de2d26', '#fb6a4a', '#cfae91', '#08519c', '#3182db', '#6baed6', '#636363', '#969696', '#cccccc'];
+let COLOR_BLIND_COLORS = d3.scaleOrdinal(['#a50f15', '#de2d26', '#fb6a4a', '#cfae91', '#08519c', '#3182db', '#6baed6', '#636363', '#969696', '#cccccc']);
+let NORMAL_COLORS = d3.scaleOrdinal(d3.schemeCategory10);
 let color = d3.scaleOrdinal(d3.schemeCategory10);
 
 $("input[type='radio']").change(function() {
   const val = $(this).val()
   if (val === 'true') {
     COLOR_BLIND_MODE = true;
-    color = d3.scaleOrdinal(COLOR_BLIND_COLORS);
+    color = COLOR_BLIND_COLORS;
   }
   else {
     COLOR_BLIND_MODE = false;
-    color = d3.scaleOrdinal(d3.schemeCategory10);
+    color = NORMAL_COLORS;
   }
   redraw();
 });
@@ -205,11 +320,11 @@ $('#search').submit(e => {
         }
       });
   if (d) {
-    var home = svg.selectAll("path")._groups[0][0].__data__;
-    clickOn(home);
+    var anc = getAncestors(d);
+    clickOn(anc[1]);
     updateInformation(d);
     updateBreadcrumbs(d);
-    setOpacity(d, 0.2);
+    setOpacity(d, 1, 0.2);
   }
   else {
     alert("This item does not exist, please pick one from the list");
@@ -257,16 +372,16 @@ const middleArcLine = d => {
 const textFits = d => {
     const CHAR_SPACE = 6;
     const deltaAngle = x(d.x1) - x(d.x0);
-    const r = Math.max(0, (y(d.y0) + y(d.y1) +40) / 2); // Changed
+    const r = Math.max(0, (y(d.y0) + y(d.y1)) / 2); // Changed
     const perimeter = r * deltaAngle;
     return d.data.name.length * CHAR_SPACE < perimeter;
 };
 
-
 // ---------------------------------------------------------------------
 // This is the Visualisation
 
-var svg = d3.select("#svg-div").append("svg:svg")
+var svg = d3.select("#svg-div")
+    .append("svg:svg")
     .attr("width", width)
     .attr("height", height)
     .append("svg:g")
@@ -274,7 +389,14 @@ var svg = d3.select("#svg-div").append("svg:svg")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
     .on('click', clickOn);
 
-d3.select("#container").on("mouseleave", d => mouseLeave(d, true));
+//d3.select("#container").on("mouseleave", d => mouseLeave(d, true));
+
+var center = svg.append("circle")
+      .attr("r", radius / 10)
+      .on("click", function(d) {});
+
+  center.append("title")
+      .text("Zoom Out");
 
 // ---------------------------------------------------------------------
 // Side Information
@@ -282,22 +404,54 @@ d3.select("#container").on("mouseleave", d => mouseLeave(d, true));
 var Depths = { 0: 'Foods', 1: 'Food Groups', 2: 'Food Subgroups', 3: 'Food'}
 const DEPTH = Object.keys(Depths).length;
 
+function gradesSpan(min, max) {
+  const solid_star = '<i class="fas fa-star"></i>';
+  const empty_star = '<i class="far fa-star"></i>';
+  const half_star  = '<i class="fas fa-star-half-alt"></i>';
+
+  let html = '<span>';
+
+  for (i = 0; i < Math.floor(min); i ++) {
+    html += solid_star;
+  }
+  if (min % 1 != 0) {
+    html += half_star;
+  }
+  for (i = 0; i < (5-Math.ceil(min)); i++) {
+    html += empty_star;
+  }
+
+  html += ' - ';
+
+  for (i = 0; i < Math.floor(max); i ++) {
+    html += solid_star;
+  }
+  if (max % 1 != 0) {
+    html += half_star;
+  }
+  for (i = 0; i < (5-Math.ceil(max)); i++) {
+    html += empty_star;
+  }
+  
+
+  html += '</span>';
+  return html;
+}
+
 function showFoodInformation(d) {
   const name_scientific = d.data.name_scientific;
   const description = d.data.description || "Description not available";
   const parent_name = d.parent.data.name;
+  const min_grade = d.data.min_grade;
+  const max_grade = d.data.max_grade;
 
   var div = document.createElement('div');
   let html = '';
   if (name_scientific) {
     html += '<p style="text-align: center;"><b>Scientific Name:</b> '+name_scientific+'</p>'
   }
-  let parentspan = $('<span />');
-  parentspan.text(parent_name); //<span onclick='+clickOn()+'>'+parent_name+'</span>;
- // parentspan.on('click', clickOn(d.parent));
- // console.log(parentspan)
   html += '<p><b>Parent Group: </b>'+parent_name+'</p>';
-//  html += parentspan[0];
+  html += '<p><b>Grade Range: </b>'+gradesSpan(min_grade,max_grade)+'</p>';
   html += '<p>'+description+'</p>';
   div.innerHTML = html;
 
@@ -314,19 +468,33 @@ function showGroupInformation(d) {
   var group_parent = group_name || d.parent.data.name;
   var grade = d.data.grade;
   var group_children = d.data.children || ""; // Bug that appears until foods are added to the system
+  const min_grade = d.data.min_grade;
+  const max_grade = d.data.max_grade;
+
   var str = "";
   group_children.forEach(child => { str = str + child.name + ', ' });
   str = str.substring(0, str.length - 2);
 
   var div = document.createElement('div');
-  let html = '<p><b>Here you can find the following Subgroups such as :</b> '+str+'</p>';
-  if (grade) {
-    html += '<p><b>Grade:</b> '+grade+'</p>';
-  }''
+  let html = "";
+  html += '<p><b>Grade Rage: </b>'+gradesSpan(min_grade,max_grade)+'</p>';
+  html += '<p><b>Click here to find subgroups such as:</b> '+str+'</p>';
+  
   div.innerHTML = html;
+ 
+  document.getElementById('info').appendChild(div);
+}
 
-
-    
+function showHomeInformation(d) {
+  var info_div = $('#info');
+  var group_name = d.data.name;
+  var div = document.createElement('div');
+  var str = "";
+  var group_children = d.data.children || "";
+  group_children.forEach(child => { str = str + child.name + ', ' });
+  str = str.substring(0, str.length - 2);
+  let html = '<p><b>Click here to find subgroups such as:</b> '+str+'</p>';
+  div.innerHTML = html;
   document.getElementById('info').appendChild(div);
 }
 
@@ -343,13 +511,12 @@ function clearInformation(d) {
 
 function updateInformation(d) {
   clearInformation(d);
-
   const name = d.data.name;
   let name_div = $('#item_name');
   name_div[0].innerText = name;
 
   switch(d.depth) {
-    case 0: showGroupInformation(d); 
+    case 0: showHomeInformation(d); 
       break;
     case 1: showGroupInformation(d); 
       break;
@@ -407,12 +574,12 @@ function getAncestors(node) {
 // ---------------------------------------------------------------------
 // Opacity
 
-function setOpacity(d, op) {
+function setOpacity(d, op_highlight, op_dim) {
   var sequenceArray = getAncestors(d);
-  d3.selectAll("path").style("opacity", op);
+  d3.selectAll("path").style("opacity", op_dim);
   svg.selectAll("path")
       .filter(node => { return (sequenceArray.indexOf(node) >= 0)})
-      .style("opacity", 1);
+      .style("opacity", op_highlight);
 }
 
 // ---------------------------------------------------------------------
@@ -421,15 +588,18 @@ function setOpacity(d, op) {
 function mouseOver(d) {
   updateBreadcrumbs(d);
   updateInformation(d);
-  setOpacity(d, 0.3);
+  setOpacity(d, 1, 0.3);
+
+  updateCurrentAction(d);
 }
 
 function mouseLeave(d, segment=false) { 
 
 }
 
-function clickOn(d = { x0: 0, x1: 1, y0: 0, y1: 1 }) {
-  //console.log(d)
+function clickOn(d) {
+  if (d) { 
+    CURRENT_D = d;
     const transition = svg.transition()
         .duration(750)
         .tween('scale', () => {
@@ -439,11 +609,23 @@ function clickOn(d = { x0: 0, x1: 1, y0: 0, y1: 1 }) {
         });
     transition.selectAll('path.main-arc').attrTween('d', d => () => arc(d));
     transition.selectAll('path.hidden-arc').attrTween('d', d => () => middleArcLine(d));
+    
+    const depth = d.depth;
+    CURRENT_DEPTH = depth;
+    
+    transition.selectAll('path.main-arc').attr('display', d => (depth+3 > d.depth) ? null : 'none');
+    transition.selectAll('path.hidden-arc').attr('display', d => (depth+3>d.depth) ? null : 'none');
+    transition.selectAll('text').attr('display', d => (depth+3>d.depth) ? null : 'none');
+
     transition.selectAll('text').attrTween('display', d => () => textFits(d) ? null : 'none');
+}
 }
 
 // ----------------------------------------------------------------------
 // Sunburst
+
+var CURRENT_DEPTH = 0;
+var CURRENT_D = null;
 
 function VisualiseData(data) {
   const root = d3.hierarchy(data)
@@ -456,7 +638,8 @@ function VisualiseData(data) {
   const newSlice = slice.enter()
       .append('g').attr('class', 'slice')
       .on('mouseover', mouseOver)
-      .on('click', d => { d3.event.stopPropagation(); clickOn(d) });
+      .on('click', d => { d3.event.stopPropagation(); clickOn(d) })
+      //.attr('display', d => (CURRENT_DEPTH+2>=d.depth) ? null : 'none');
 
   newSlice.append('title')
       .text(d => d.data.name);
@@ -475,7 +658,40 @@ function VisualiseData(data) {
       .attr('startOffset','50%')
       .attr('xlink:href', (_, i) => `#hiddenArc${i}`)
       .text(d => d.data.name);
+
+  var home = svg.selectAll("path")._groups[0][0].__data__;
+  CURRENT_D = home;
+  updateInformation(CURRENT_D);
+  updateBreadcrumbs(CURRENT_D);
+  clickOn(home);
 }
+
+/*
+var partitioned_data = partition.nodes(d3.hierarchy(DATA)).slice(1)
+function filter_min_arc_size_text(d, i) {return (d.dx*d.depth*radius/1)>14};
+function isRotated(d) {
+    var rotation = (d.x + d.dx / 2) * 180 / Math.PI - 90;
+    return rotation > 90 ? true : false
+}
+
+var texts = svg.selectAll("text")
+      .data(partitioned_data)
+      .enter()
+      .append("text")
+      .filter(filter_min_arc_size_text)
+      .attr("transform", d => {
+          var r = computeTextRotation(d);
+          return "rotate(" + r.global + ")"
+            + "translate(" + radius / 3. * d.depth + ")"
+            + "rotate(" + -r.correction + ")";
+      })
+      .style("font-weight", "bold")
+      .style("text-anchor", "middle")
+      .attr("dx", d => {return isRotated(d) ? "-85" : "85"}) //margin
+      .attr("dy", ".35em") // vertical-align
+      .on("click", clickOn)
+      .text( (d,i) => {return d.name})
+*/
 // ---------------------------------------------------------------------
 // Fetch the data and show the visualisation
 
