@@ -327,7 +327,13 @@ function showFoodInformation(d) {
     html += '<p style="text-align: center;"><b>Scientific Name:</b> '+name_scientific+'</p>'
   }
   html += '<p><b>Parent Group: </b>'+parent_name+'</p>';
-  html += '<p><b>Grade Range: </b>'+gradesSpan(min_grade,max_grade)+'</p>';
+  if (min_grade && max_grade) {
+  	html += '<p><b>Grade Range: </b>'+gradesSpan(min_grade,max_grade)+'</p>';
+  }
+  else {
+  	html += '<p><b>Grade Range: </b> No information </p>';
+  }
+  
   html += '<p>'+description+'</p>';
   div.innerHTML = html;
   document.getElementById('info').appendChild(div);
