@@ -53,13 +53,11 @@
     clear: both;
     display: block;
     height: 350px;
-    overflow:scroll;
+    overflow-y:scroll;
   }
   .legenda {
     width: 100%;
-    clear: both;
     height: 60px;
-    display: inline-block;
   }
   .columnNav {
    float: left;
@@ -92,7 +90,7 @@
      padding: 35px;
      font-size: 17px;
   }
-  .columnNav button {
+  #searchBtn {
   float: right;
   padding: 6px 10px;
   background: #ddd;
@@ -106,7 +104,6 @@
 .columnNav button:hover {
   background: #ccc;
 }
-
 /* The Modal (background) */
 .modal {
   display: none; /* Hidden by default */
@@ -121,7 +118,6 @@
   background-color: rgb(0,0,0); /* Fallback color */
   background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
 }
-
 /* Modal Content */
 .modal-content {
   background-color: #fefefe;
@@ -130,7 +126,6 @@
   border: 1px solid #888;
   width: 200px;
 }
-
 /* The Close Button */
 .close {
   color: #aaaaaa;
@@ -138,12 +133,31 @@
   font-size: 28px;
   font-weight: bold;
 }
-
 .close:hover,
 .close:focus {
   color: #000;
   text-decoration: none;
   cursor: pointer;
+}
+#filterButton {
+  margin-left: 65px;
+  float: right;
+  padding: 6px 10px;
+  background: #ddd;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+}
+#filter {
+  display: inline;
+  float: left;
+  margin-left: 20px;
+  font-size: 1.5em;
+  vertical-align: center;
+}
+#filterText {
+ width: 100%;
+ margin-top: 20px;
 }
 </style>
 <body>
@@ -152,48 +166,63 @@
   <div class="columnNav">
   <!--  <select id="combobox"></select>-->
 
-    <form id='search'>
-      <input id='searchInput' list="datalist" aria-autocomplete="options" type="text" placeholder="Search for Food(Group).." name="search">
-      <button><i class="fa fa-search"></i></button>
-      <datalist id="datalist"></datalist>
-    </form>
-	
+  <div class="table">
+    <div class="row">
+      <form id='search'>
+        <input id='searchInput' list="datalist" aria-autocomplete="options" type="text" placeholder="Search for Food(Group).." name="search">
+        <button id='searchBtn'><i class="fa fa-search"></i></button>
+        <datalist id="datalist"></datalist>
+     </form>
+   </div>
+	 
 	<!-- button for modal -->
-	<button id="filterButton"><i class="fa fa-filter"></i></button>
-	
-	<!-- the filter modal -->
-	<div id="filterModal" class="modal">
-		<div class="modal-content">
-			<span class="close">&times;</span>
-			<p>Don't show food with:</p>
-			<form id='filterForm'>
-			  <input type="checkbox" name="food" value="Protein"> Protein<br>
-			  <input type="checkbox" name="food" value="Gluten"> Gluten<br>
-			  <input type="checkbox" name="food" value="Sugars"> Sugars<br>
-			  <input type="checkbox" name="food" value="Cholesterol"> Cholesterol<br>
-			  <input type="checkbox" name="food" value="Calcium (Ca)"> Calcium (Ca)<br>
-			  <input type="checkbox" name="food" value="Copper (Cu)"> Copper (Cu)<br>
-			  <input type="checkbox" name="food" value="Iron (Fe)"> Iron (Fe)<br>
-			  <input type="checkbox" name="food" value="Sodium (Na)"> Sodium (Na)<br>
-			  <input type="checkbox" name="food" value="Fiber"> Fiber<br>
-			  <input type="checkbox" name="food" value="Vitamin A"> Vitamin A<br>
-			  <input type="checkbox" name="food" value="Vitamin B12"> Vitamin B12<br>
-			  <input type="checkbox" name="food" value="Vitamin B6"> Vitamin B6<br>
-			  <input type="checkbox" name="food" value="Vitamin C"> Vitamin C<br>
-			  <input type="checkbox" name="food" value="Vitamin D"> Vitamin D<br>
-			  <input type="checkbox" name="food" value="Vitamin E"> Vitamin E<br>
-			  <input type="checkbox" name="food" value="Vitamin K"> Vitamin K<br>
-			  <input type="submit" value="Submit">
-			</form> 
-		</div>
-	</div>
-	
+    <div class="row">
+      <form id='filter'>
+        <label>Filter Compounds: </label>
+        <button id="filterButton"><i class="fa fa-filter"></i></button>
+        </form>
+	 </div>
   </div>
+
+
+	 <!-- the filter modal -->
+	 <div id="filterModal" class="modal">
+	 	<div class="modal-content">
+	 		<span class="close">&times;</span>
+	 		<p>Hide foods with these compounds</p>
+	 		<form id='filterForm'>
+	 		  <input type="checkbox" name="compound" value="Protein"> Protein<br>
+	 		  <input type="checkbox" name="compound" value="Gluten"> Gluten<br>
+	 		  <input type="checkbox" name="compound" value="Sugars"> Sugars<br>
+	 		  <input type="checkbox" name="compound" value="Cholesterol"> Cholesterol<br>
+	 		  <input type="checkbox" name="compound" value="Calcium (Ca)"> Calcium (Ca)<br>
+	 		  <input type="checkbox" name="compound" value="Copper (Cu)"> Copper (Cu)<br>
+	 		  <input type="checkbox" name="compound" value="Iron (Fe)"> Iron (Fe)<br>
+	 		  <input type="checkbox" name="compound" value="Sodium (Na)"> Sodium (Na)<br>
+	 		  <input type="checkbox" name="compound" value="Fiber"> Fiber<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin A"> Vitamin A<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin B12"> Vitamin B12<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin B6"> Vitamin B6<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin C"> Vitamin C<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin D"> Vitamin D<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin E"> Vitamin E<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin K"> Vitamin K<br>
+	 		  <button id='applyFilter'>Filter</button>
+	 		</form> 
+	  </div>
+  </div>	
+</div>
+
   <h1 class="columnTitle" style="float: center;">Information Visualisation</h1>
-  <div id="colorBlindForm" class='columnNavRadio'>
+
+  <div id="settings" class='columnNavRadio'>
     <label>Color Blind Mode: </label>
-    <input type="radio" name="radioName" value="true" /> On 
-    <input type="radio" name="radioName" value="false" checked/> Off 
+    <input type="radio" name="colorBlind" value="true" /> On 
+    <input type="radio" name="colorBlind" value="false" checked/> Off
+    <br>
+    <label>Instructions:     </label>
+    <input type="radio" name="setting" value="true" checked/> Show 
+    <input type="radio" name="setting" value="false"/> Hide 
   </div>
 </div>
 
@@ -206,7 +235,7 @@
       <h2 id="item_name"></h2>
       <div id="info"></div>
     </div>
-    <div id="legenda" class="legenda">
+    <div id="instructionsSideBar" class="legenda">
       <h2 id="d">Instructions</h2>
       <p style="text-align: center;"> (hover over the instructions to see them in action)</p>
       <p id="backInstr">  <b style="font-size: 1.25em;">Back:</b> <i style="font-size: 1.25em;">Click</i> at the center of the Visualisation</p>
@@ -225,11 +254,79 @@
 <script src="libs/d3/d3.js"></script>
 <script type="text/javascript">
 
+// ------------ FILTER MODAL ------------
+// Get the modal
+var modal = document.getElementById("filterModal");
+
+// When the user clicks the button, open the modal 
+
+var FILTERS = [];
+
+$('#applyFilter').on('click', e => {  
+  modal.style.display = "none";
+  let compoundCheckboxes = $("input[name='compound']");
+  for (i = 0; i < compoundCheckboxes.length; i++) {
+    let compoundCheckbox = compoundCheckboxes[i];
+    if (compoundCheckbox.checked) {
+      console.log(compoundCheckbox.value)
+    }
+  }
+/*
+  $.ajax({
+  type: 'GET',
+  contentType: 'application/json',
+  url: 'http://localhost:4000/getFoodGroups',
+  success: data => {
+    DATA = data.json;
+    DrawVisualisation(data.json, data.names)
+  },
+  error: (xhr, status, error) => {
+    console.log(error)
+  },
+
+});
+*/
+
+  e.preventDefault();
+});
+$('#filterButton').on('click', e => {  
+  modal.style.display = "block";
+  e.preventDefault();
+});
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+// When the user clicks on <span> (x), close the modal
+span.onclick = e => {
+  modal.style.display = "none";
+  e.preventDefault();
+}
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = e => {
+  if (e.target == modal) {
+    modal.style.display = "none";
+  }
+}
+
 // ----------------------------------
 // Instructions
 
-let instr_busy = false;
+$("input[name='setting']").change(function() {
+  const val = $(this).val();
+  console.log(val)
+  var element = document.getElementById("instructionsSideBar");
+  var info_element = document.getElementById("item_info");
+  if (val === 'true') {
+    element.style.display = "block";
+    info_element.style.height = '350px';
+  }
+  else {
+    element.style.display = "none";
+    info_element.style.height = '100%';
+  }
+});
 
+
+let instr_busy = false;
 function updateCurrentAction(d) {
   var name = d.data.name;
   $('#hover_action').text('see information about: '+name);
@@ -240,7 +337,6 @@ function updateCurrentAction(d) {
     $('#click_action').text('see subgroups of '+name);
   }
   
-
   var str_hover = "HOVER here to see information about: "+name;
   var str_subgroups = "";
   //var group_children = d.data.children;
@@ -248,7 +344,6 @@ function updateCurrentAction(d) {
   var str_click = "CLICK here to see information about: "+str_subgroups
   $('#curr_actions').append(d.data.name);
 }
-
 function blinkHome(blink) {
   if (blink) {
     if (CURRENT_DEPTH === 0) {
@@ -267,11 +362,9 @@ function blinkHome(blink) {
     }
   }
 }
-
-
 $('#backInstr').on('mouseover', e => {
   if (!instr_busy) {
-    d3.selectAll("path").style("opacity", 0.2);
+    setOpacityAll(0.2);
     instr_busy = true;
   //  d3.selectAll("path").style("opacity", 0.2);
     setTimeout(() => {
@@ -300,7 +393,6 @@ $('#backInstr').on('mouseover', e => {
     }, 500);
   }
 });
-
 function blinkGroup(blink, child) {
   if (blink) {
     setOpacity(child, 1, 0.2);
@@ -309,14 +401,13 @@ function blinkGroup(blink, child) {
     setOpacity(child, 0.2, 0.2);
   }
 }
-
 $('#selectInstr').on('mouseover', e => {
   if (!instr_busy) {
     if (CURRENT_D.children) {
       const child = CURRENT_D.children[1];
       instr_busy = true;
     
-      d3.selectAll("path").style("opacity", 0.2);
+      setOpacityAll(0.2);
       setTimeout(() => {
         blinkGroup(true, child);
         setTimeout(() => {
@@ -340,16 +431,13 @@ $('#selectInstr').on('mouseover', e => {
     }
   }
 });
-
 // ----------------------------------
 // Color Blindness
-
 let COLOR_BLIND_MODE = false;
 let COLOR_BLIND_COLORS = d3.scaleOrdinal(['#a50f15', '#de2d26', '#fb6a4a', '#cfae91', '#08519c', '#3182db', '#6baed6', '#636363', '#969696', '#cccccc']);
 let NORMAL_COLORS = d3.scaleOrdinal(d3.schemeCategory10);
 let color = d3.scaleOrdinal(d3.schemeCategory10);
-
-$("input[type='radio']").change(function() {
+$("input[name='colorBlind']").change(function() {
   const val = $(this).val()
   if (val === 'true') {
     COLOR_BLIND_MODE = true;
@@ -361,7 +449,6 @@ $("input[type='radio']").change(function() {
   }
   redraw();
 });
-
 function redraw() {
   $("#svg-div").empty();
   svg = d3.select("#svg-div").append("svg:svg")
@@ -373,12 +460,9 @@ function redraw() {
     .on('click', clickOn);
   VisualiseData(DATA);
 }
-
 // ----------------------------------
 // Search
-
 let NAMES = [];
-
 $('#search').submit(e => {
   const name = e.currentTarget[0].value;
   var d = false;
@@ -400,18 +484,15 @@ $('#search').submit(e => {
   }
   e.preventDefault();
 });
-
-function InitialiseAutocomplete(names) {
+function InitialiseAutocomplete(names) {
   var datalist = $('#datalist');
   names.forEach(name => {
     const option = '<option value="'+name+'"">';
     datalist.append(option)
   })
 }
-
 // -----------------------------------
 // Init constants and helper functions
-
 const formatNumber = d3.format(',d');
 const width = $('#svg-div').width();// window.innerWidth;
 const height = (window.innerHeight *80 /100); //$('#svg-div').height();//;
@@ -419,13 +500,11 @@ const radius = (Math.min(width, height) / 2) - 5;
 const x = d3.scaleLinear().range([0, 2 * Math.PI]).clamp(true);
 const y = d3.scaleSqrt().range([radius*.1, radius]);
 const partition = d3.partition();
-
 const arc = d3.arc()
     .startAngle(d => x(d.x0))
     .endAngle(d => x(d.x1))
     .innerRadius(d => Math.max(0, y(d.y0)))
     .outerRadius(d => Math.max(0, y(d.y1)))
-
 const middleArcLine = d => {
     const halfPi = Math.PI/2;
     const angles = [x(d.x0) - halfPi, x(d.x1) - halfPi];
@@ -437,7 +516,6 @@ const middleArcLine = d => {
     path.arc(0, 0, r, angles[0], angles[1], invertDirection);
     return path.toString();
 };
-
 const textFits = d => {
     const CHAR_SPACE = 6;
     const deltaAngle = x(d.x1) - x(d.x0);
@@ -445,10 +523,8 @@ const textFits = d => {
     const perimeter = r * deltaAngle;
     return d.data.name.length * CHAR_SPACE < perimeter;
 };
-
 // ---------------------------------------------------------------------
 // This is the Visualisation
-
 var svg = d3.select("#svg-div")
     .append("svg:svg")
     .attr("width", width)
@@ -457,29 +533,21 @@ var svg = d3.select("#svg-div")
     .attr("id", "container")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
     .on('click', clickOn);
-
 //d3.select("#container").on("mouseleave", d => mouseLeave(d, true));
-
 var center = svg.append("circle")
       .attr("r", radius / 10)
       .on("click", function(d) {});
-
   center.append("title")
       .text("Zoom Out");
-
 // ---------------------------------------------------------------------
 // Side Information
-
 var Depths = { 0: 'Foods', 1: 'Food Groups', 2: 'Food Subgroups', 3: 'Food'}
 const DEPTH = Object.keys(Depths).length;
-
 function gradesSpan(min, max) {
   const solid_star = '<i class="fas fa-star"></i>';
   const empty_star = '<i class="far fa-star"></i>';
   const half_star  = '<i class="fas fa-star-half-alt"></i>';
-
   let html = '<span>';
-
   for (i = 0; i < Math.floor(min); i ++) {
     html += solid_star;
   }
@@ -489,9 +557,7 @@ function gradesSpan(min, max) {
   for (i = 0; i < (5-Math.ceil(min)); i++) {
     html += empty_star;
   }
-
   html += ' - ';
-
   for (i = 0; i < Math.floor(max); i ++) {
     html += solid_star;
   }
@@ -502,35 +568,28 @@ function gradesSpan(min, max) {
     html += empty_star;
   }
   
-
   html += '</span>';
   return html;
 }
-
 function showFoodInformation(d) {
   const name_scientific = d.data.name_scientific;
   const description = d.data.description || "Description not available";
   const parent_name = d.parent.data.name;
   const min_grade = d.data.min_grade;
   const max_grade = d.data.max_grade;
-
   var div = document.createElement('div');
   let html = '';
-  if (name_scientific) {
+  if (name_scientific) {
     html += '<p style="text-align: center;"><b>Scientific Name:</b> '+name_scientific+'</p>'
   }
   html += '<p><b>Parent Group: </b>'+parent_name+'</p>';
   html += '<p><b>Grade Range: </b>'+gradesSpan(min_grade,max_grade)+'</p>';
   html += '<p>'+description+'</p>';
   div.innerHTML = html;
-
   document.getElementById('info').appendChild(div);
 }
-
-function showDishInformation(d) {
-
+function showDishInformation(d) {
 }
-
 function showGroupInformation(d) {
   var info_div = $('#info');
   var group_name = d.data.name;
@@ -539,11 +598,9 @@ function showGroupInformation(d) {
   var group_children = d.data.children || ""; // Bug that appears until foods are added to the system
   const min_grade = d.data.min_grade;
   const max_grade = d.data.max_grade;
-
   var str = "";
   group_children.forEach(child => { str = str + child.name + ', ' });
   str = str.substring(0, str.length - 2);
-
   var div = document.createElement('div');
   let html = "";
   html += '<p><b>Grade Rage: </b>'+gradesSpan(min_grade,max_grade)+'</p>';
@@ -553,7 +610,6 @@ function showGroupInformation(d) {
  
   document.getElementById('info').appendChild(div);
 }
-
 function showHomeInformation(d) {
   var info_div = $('#info');
   var group_name = d.data.name;
@@ -566,24 +622,20 @@ function showHomeInformation(d) {
   div.innerHTML = html;
   document.getElementById('info').appendChild(div);
 }
-
-function clearInformation(d) {
+function clearInformation(d) {
   var info_div = $('#info');
   let name = $('#item_name');
   
   if (d.depth === DEPTH) {
     name[0].innerText = "";
   }
-
   info_div.empty();
 }
-
 function updateInformation(d) {
   clearInformation(d);
   const name = d.data.name;
   let name_div = $('#item_name');
   name_div[0].innerText = name;
-
   switch(d.depth) {
     case 0: showHomeInformation(d); 
       break;
@@ -598,26 +650,20 @@ function updateInformation(d) {
     default: console.log("Error: unhandled depth", d);
   }
 }
-
 // ---------------------------------------------------------------------
 // Clickable Breadcrumbs
-
 function clearBreadCrumbs() {
   d3.select('.breadcrumbs').selectAll('.breadcrumb').remove();
 };
-
 function updateBreadcrumbs(d) {
     clearBreadCrumbs();
-
     const crumbContainer = d3.select('.breadcrumbs');
     const anc = getAncestors(d);
-
     // Add First: 'Foods'
     crumbContainer.append('span')
         .classed('breadcrumb', true)
         .text(anc[0].data.name)
         .on("click", (_, a ,f) => { clickOn(anc[0]) });
-
     // add rest
     for (i = 1; i < anc.length; i++) {
       const n = anc[i];
@@ -627,7 +673,6 @@ function updateBreadcrumbs(d) {
         .on("click", (_, a ,f) => { clickOn(n) });
     } 
 }
-
 function getAncestors(node) {
   var path = [];
   var current = node;
@@ -639,9 +684,11 @@ function getAncestors(node) {
   path.reverse();
   return path;
 }
-
 // ---------------------------------------------------------------------
 // Opacity
+function setOpacityAll(opacity) {
+  d3.selectAll("path").style("opacity", opacity);
+}
 
 function setOpacity(d, op_highlight, op_dim) {
   var sequenceArray = getAncestors(d);
@@ -650,22 +697,16 @@ function setOpacity(d, op_highlight, op_dim) {
       .filter(node => { return (sequenceArray.indexOf(node) >= 0)})
       .style("opacity", op_highlight);
 }
-
 // ---------------------------------------------------------------------
 // UI listeners
-
 function mouseOver(d) {
   updateBreadcrumbs(d);
   updateInformation(d);
   setOpacity(d, 1, 0.3);
-
   updateCurrentAction(d);
 }
-
 function mouseLeave(d, segment=false) { 
-
 }
-
 function clickOn(d) {
   if (d) { 
     CURRENT_D = d;
@@ -685,31 +726,24 @@ function clickOn(d) {
     transition.selectAll('path.main-arc').attr('display', d => (depth+3 > d.depth) ? null : 'none');
     transition.selectAll('path.hidden-arc').attr('display', d => (depth+3>d.depth) ? null : 'none');
     transition.selectAll('text').attr('display', d => (depth+3>d.depth) ? null : 'none');
-
     transition.selectAll('text').attrTween('display', d => () => textFits(d) ? null : 'none');
 }
 }
-
 // ----------------------------------------------------------------------
 // Sunburst
-
 var CURRENT_DEPTH = 0;
 var CURRENT_D = null;
-
 function VisualiseData(data) {
   const root = d3.hierarchy(data)
       .sum(d => d.size);
-
   const slice = svg.selectAll('g.slice')
       .data(partition(root).descendants());
   slice.exit().remove();
-
   const newSlice = slice.enter()
       .append('g').attr('class', 'slice')
       .on('mouseover', mouseOver)
       .on('click', d => { d3.event.stopPropagation(); clickOn(d) })
       //.attr('display', d => (CURRENT_DEPTH+2>=d.depth) ? null : 'none');
-
   newSlice.append('title')
       .text(d => d.data.name);
   newSlice.append('path')
@@ -720,21 +754,18 @@ function VisualiseData(data) {
       .attr('class', 'hidden-arc')
       .attr('id', (_, i) => `hiddenArc${i}`)
       .attr('d', middleArcLine);
-
   const text = newSlice.append('text')
       .attr('display', d => textFits(d) ? null : 'none');
   text.append('textPath')
       .attr('startOffset','50%')
       .attr('xlink:href', (_, i) => `#hiddenArc${i}`)
       .text(d => d.data.name);
-
   var home = svg.selectAll("path")._groups[0][0].__data__;
   CURRENT_D = home;
   updateInformation(CURRENT_D);
   updateBreadcrumbs(CURRENT_D);
   clickOn(home);
 }
-
 /*
 var partitioned_data = partition.nodes(d3.hierarchy(DATA)).slice(1)
 function filter_min_arc_size_text(d, i) {return (d.dx*d.depth*radius/1)>14};
@@ -742,7 +773,6 @@ function isRotated(d) {
     var rotation = (d.x + d.dx / 2) * 180 / Math.PI - 90;
     return rotation > 90 ? true : false
 }
-
 var texts = svg.selectAll("text")
       .data(partitioned_data)
       .enter()
@@ -763,49 +793,23 @@ var texts = svg.selectAll("text")
 */
 // ---------------------------------------------------------------------
 // Fetch the data and show the visualisation
+function DrawVisualisation(data, names) {
+  InitialiseAutocomplete(names);
+  VisualiseData(data);
+}
 
 let DATA = {};
-
 $.ajax({
   type: 'GET',
   contentType: 'application/json',
   url: 'http://localhost:4000/getFoodGroups',
   success: data => {
     DATA = data.json;
-    InitialiseAutocomplete(data.names);
-    VisualiseData(DATA);
+    DrawVisualisation(data.json, data.names)
   },
   error: (xhr, status, error) => {
     console.log(error)
   },
 });
-
-// ------------ FILTER MODAL ------------
-// Get the modal
-var modal = document.getElementById("filterModal");
-
-// Get the button that opens the modal
-var btn = document.getElementById("filterButton");
-
-// Get the <span> element that closes the modal
-var span = document.getElementsByClassName("close")[0];
-
-// When the user clicks the button, open the modal 
-btn.onclick = function() {
-  modal.style.display = "block";
-}
-
-// When the user clicks on <span> (x), close the modal
-span.onclick = function() {
-  modal.style.display = "none";
-}
-
-// When the user clicks anywhere outside of the modal, close it
-window.onclick = function(event) {
-  if (event.target == modal) {
-    modal.style.display = "none";
-  }
-}
-
 </script>
 </html>
