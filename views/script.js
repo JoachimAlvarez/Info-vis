@@ -1,14 +1,16 @@
+// Helper Functions
+const hideElement = el => el.style.display = "none";
+const showElement = el => el.style.display = "block";
+
+
 
 // ------------ FILTER MODAL ------------
-// Get the modal
 var modal = document.getElementById("filterModal");
-
-// When the user clicks the button, open the modal 
 
 var FILTERS = [];
 
 $('#applyFilter').on('click', e => {  
-  modal.style.display = "none";
+  hideElement(modal)
   let compounds = [];
 
   $.each($("input[name='compound']:checked"), function() {
@@ -34,20 +36,20 @@ $('#applyFilter').on('click', e => {
   e.preventDefault();
 });
 $('#filterButton').on('click', e => {  
-  modal.style.display = "block";
+  showElement(modal)
   e.preventDefault();
 });
 // Get the <span> element that closes the modal
 var span = document.getElementsByClassName("close")[0];
 // When the user clicks on <span> (x), close the modal
 span.onclick = e => {
-  modal.style.display = "none";
+  hideElement(modal)
   e.preventDefault();
 }
 // When the user clicks anywhere outside of the modal, close it
 window.onclick = e => {
   if (e.target == modal) {
-    modal.style.display = "none";
+    hideElement(modal)
   }
 }
 
@@ -56,15 +58,14 @@ window.onclick = e => {
 
 $("input[name='setting']").change(function() {
   const val = $(this).val();
-  console.log(val)
   var element = document.getElementById("instructionsSideBar");
   var info_element = document.getElementById("item_info");
   if (val === 'true') {
-    element.style.display = "block";
+  	showElement(element);
     info_element.style.height = '350px';
   }
   else {
-    element.style.display = "none";
+  	hideElement(element)
     info_element.style.height = '100%';
   }
 });
@@ -402,9 +403,8 @@ function updateInformation(d) {
 }
 // ---------------------------------------------------------------------
 // Clickable Breadcrumbs
-function clearBreadCrumbs() {
-  d3.select('.breadcrumbs').selectAll('.breadcrumb').remove();
-};
+const clearBreadCrumbs = () => d3.select('.breadcrumbs').selectAll('.breadcrumb').remove();
+  
 function updateBreadcrumbs(d) {
     clearBreadCrumbs();
     const crumbContainer = d3.select('.breadcrumbs');
@@ -442,9 +442,7 @@ function getAncestors(node) {
 }
 // ---------------------------------------------------------------------
 // Opacity
-function setOpacityAll(opacity) {
-  d3.selectAll("path").style("opacity", opacity);
-}
+const setOpacityAll = opacity => d3.selectAll("path").style("opacity", opacity);
 
 function setOpacity(d, op_highlight, op_dim) {
   var sequenceArray = getAncestors(d);
@@ -561,6 +559,7 @@ $.ajax({
   url: 'http://localhost:4000/getFoodGroups',
   success: data => {
     DATA = data.json;
+    console.log(DATA)
     DrawVisualisation(data.json, data.names)
   },
   error: (xhr, status, error) => {
