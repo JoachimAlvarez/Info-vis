@@ -14,7 +14,7 @@ let init_done = false;
 
 const foodgroup_sql = 'select food_group,min(grade),max(grade) from tbl_food_dishes group by food_group';
 const food_subgroup_sql = food_group => 'select food_subgroup,min(grade),max(grade) from tbl_food_dishes group by food_group,food_subgroup having food_group="'+food_group+'"';
-const food_sql = food_subgroup => 'select food_id,food_name,name_scientific,description,min(grade),max(grade) from tbl_food_dishes group by food_subgroup,food_name,food_id,name_scientific,description having food_subgroup="'+food_subgroup+'"';
+const food_sql = food_subgroup => 'select food_id,food_name,min(grade),max(grade) from tbl_food_dishes group by food_subgroup,food_name,food_id,name_scientific,description having food_subgroup="'+food_subgroup+'"';
 
 
 function init() {
@@ -47,7 +47,6 @@ function init() {
 		
 						db.query(food_sql(food_subgroup), (err, result, fields) => {
 							if (err) {console.log(err)};
-							console.log(result)
 
 							foods = Array.from(result, res => {
 								NAMES.push(res.food_name);
@@ -130,11 +129,13 @@ module.exports = app => {
 		let names = []; 
 
 		let sql;
+		/*
 		db.query(food_sql(food_subgroup), (err, result, fields) => {
 			return
 
 			res.json({json: result, names: names});
 		});
+		*/
   	});
 
 	// ---------------------------------------------------------------------------------
