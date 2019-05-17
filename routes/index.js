@@ -12,13 +12,10 @@ let NAMES = [];
 
 let init_done = false;
 
-const foodgroup_sql = "select food_group from foods group by food_group";
-const food_subgroup_sql = food_group => "select distinct food_subgroup from foods where food_group='"+food_group+"'" ;
-const food_sql = food_subgroup => 'select distinct id,name,name_scientific,description from foods where food_subgroup="'+food_subgroup+'"';
+const foodgroup_sql = 'select food_group,min(grade),max(grade) from tbl_food_dishes group by food_group';
+const food_subgroup_sql = food_group => 'select food_subgroup,min(grade),max(grade) from tbl_food_dishes group by food_group,food_subgroup having food_group="'+food_group+'"';
+const food_sql = food_subgroup => 'select food_id,food_name,name_scientific,description,min(grade),max(grade) from tbl_food_dishes group by food_subgroup,food_name,food_id,name_scientific,description having food_subgroup="'+food_subgroup+'"';
 
-const foodgroup_grade_sql = 'select food_group,min(grade),max(grade) from tbl_food_dishes group by food_group';
-const food_subgroup_grade_sql = food_group => 'select food_subgroup,min(grade),max(grade) from tbl_food_dishes group by food_group,food_subgroup having food_group="'+food_group+'"';
-const food_grade_sql = food_subgroup => 'select food_id,food_name,min(grade),max(grade) from tbl_food_dishes group by food_subgroup,food_name,food_id having food_subgroup="'+food_subgroup+'"';
 
 function init() {
 	
@@ -26,92 +23,62 @@ function init() {
 
 	db.query(foodgroup_sql, (err, food_groups, fields) => {
 		if (err) {console.log(err)}
-		let min_grades = {};
-		let max_grades = {};
-
-		db.query(foodgroup_grade_sql, (err, food_groups_grades, fields) => {
-			if (err) {console.log(err)};
-
-			food_groups_grades.forEach(res => {
-				const food_group = res.food_group;
-				min_grades[food_group] = res['min(grade)'];
-				max_grades[food_group] = res['max(grade)'];
-			});
-
-			food_groups.forEach(res => {
-				const food_group = res.food_group;
-				NAMES.push(food_group);
-				let subgroups = [];
-	
-				// ------------ Food Subgroup --------------------------------
-	
-				db.query(food_subgroup_sql(food_group), (err, food_subgroups, fields) => {
-					if (err) {console.log(err)};
-					let min_grades_subgroups = {};
-					let max_grades_subgroups = {};
-	
-					db.query(food_subgroup_grade_sql(food_group), (err, food_subgroups_grades, fields) => {
-						if (err) {console.log(err)};
-
-						food_subgroups_grades.forEach(res => {
-							const food_subgroup = res.food_subgroup;
-							min_grades_subgroups[food_subgroup] = res['min(grade)'];
-							max_grades_subgroups[food_subgroup] = res['max(grade)'];
-						});
-					
-						food_subgroups.forEach(res => {
-							const food_subgroup = res.food_subgroup;
-							NAMES.push(food_subgroup);
-							let foods = [];					
 		
- 							// ------------ Food --------------------------------
+		food_groups.forEach(res => {
+			const food_group = res.food_group;
+			const min_grade = res['min(grade)'];
+			const max_grade = res['max(grade)'];
+			NAMES.push(food_group);
+			let subgroups = [];
+	
+			// ------------ Food Subgroup --------------------------------
+	
+			db.query(food_subgroup_sql(food_group), (err, food_subgroups, fields) => {
+				if (err) {console.log(err)};
+				
+					food_subgroups.forEach(res => {
+						const food_subgroup = res.food_subgroup;
+						const min_grade = res['min(grade)'];
+						const max_grade = res['max(grade)'];
+						NAMES.push(food_subgroup);
+						let foods = [];					
 		
-							db.query(food_sql(food_subgroup), (err, result, fields) => {
-								if (err) {console.log(err)};
-								let min_grades_food = {};
-								let max_grades_food = {};
-			
-								db.query(food_grade_sql(food_subgroup), (err, food_grades, fields) => {
-									if (err) {console.log(err)};
+ 						// ------------ Food --------------------------------
+		
+						db.query(food_sql(food_subgroup), (err, result, fields) => {
+							if (err) {console.log(err)};
+							console.log(result)
 
-									food_grades.forEach(res => {
-										const food_name = res.food_name;
-										min_grades_food[food_name] = res['min(grade)'];
-										max_grades_food[food_name] = res['max(grade)'];
-									});
-									foods = Array.from(result, res => {
-										NAMES.push(res.name);
-										return {
-											name: res.name,
-											id: res.id,
-											name_scientific: res.name_scientific,
-											description: res.description,
-											min_grade : min_grades_food[res.name],
-											max_grade : max_grades_food[res.name], 
-											size: 1
-										}
-									});
-									const food_subgroup_info = {
-										name : food_subgroup, 
-										min_grade : min_grades_subgroups[food_subgroup], 
-										max_grade : max_grades_subgroups[food_subgroup], 
-										children : foods
-									}
-									subgroups.push(food_subgroup_info);
-								});
-							});		
+							foods = Array.from(result, res => {
+								NAMES.push(res.food_name);
+								return {
+									name: res.food_name,
+									id: res.food_id,
+									name_scientific: res.name_scientific,
+									description: res.description,
+									min_grade : res['min(grade)'],
+									max_grade : res['max(grade)'],
+									size: 1
+								}
+							});
+							const food_subgroup_info = {
+								name : food_subgroup, 
+								min_grade : min_grade,
+								max_grade : max_grade,
+								children : foods
+							}
+							subgroups.push(food_subgroup_info);
 						});
-					});
-					const food_group_info = {
-						name : food_group, 
-						min_grade : min_grades[food_group], 
-						max_grade : max_grades[food_group], 
-						children : subgroups
-					}
-					FOOD_GROUPS_JSON.children.push(food_group_info);					
+					});		
 				});
-				init_done = true;
-			});
+				const food_group_info = {
+					name : food_group, 
+					min_grade : min_grade, 
+					max_grade : max_grade, 
+					children : subgroups
+				}
+				FOOD_GROUPS_JSON.children.push(food_group_info);					
+			init_done = true;
 		});
   	});
 }
@@ -150,7 +117,9 @@ init();
 module.exports = app => {
 
 	app.get('/getFoodGroups', (req, res) => {
-		while (!init_done) {};
+		while (!init_done) {
+
+		};
 		let result = FOOD_GROUPS_JSON;
    		res.json({json: FOOD_GROUPS_JSON, names: NAMES});
   	});
