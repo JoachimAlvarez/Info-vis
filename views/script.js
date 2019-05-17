@@ -420,7 +420,13 @@ function updateBreadcrumbs(d) {
       crumbContainer.append('span')
         .classed('breadcrumb', true)
         .text("  >  "+n.data.name)
-        .on("click", (_, a ,f) => { clickOn(n) });
+        .on("click", (_, a ,f) => { 
+        	clickOn(n);
+        	updateInformation(n);
+        	updateCurrentAction(n)
+        	updateBreadcrumbs(n);
+        	setOpacity(n, 1, 0.2)
+        });
     } 
 }
 function getAncestors(node) {
