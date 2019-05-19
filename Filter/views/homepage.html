@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.css">
+	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>InfoVis</title>
+  </meta>
+</head>
+<style>
+</style>
+<body>
+
+<div class="row">
+  <div class="columnNav">
+  <!--  <select id="combobox"></select>-->
+
+  <div class="table">
+    <div class="row">
+      <form id='search'>
+        <input id='searchInput' list="datalist" aria-autocomplete="options" type="text" placeholder="Search for Food(Group).." name="search">
+        <button id='searchBtn'><i class="fa fa-search"></i></button>
+        <datalist id="datalist"></datalist>
+     </form>
+   </div>
+	 
+	<!-- button for modal -->
+    <div class="row">
+      <form id='filter'>
+        <label>Filter Compounds: </label>
+        <button id="filterButton"><i class="fa fa-filter"></i></button>
+        </form>
+	 </div>
+  </div>
+
+
+	 <!-- the filter modal -->
+	 <div id="filterModal" class="modal">
+	 	<div class="modal-content">
+	 		<span class="close">&times;</span>
+	 		<p>Hide foods with these compounds</p>
+	 		<form id='filterForm'>
+	 		  <input type="checkbox" name="compound" value="Protein"> Protein<br>
+	 		  <input type="checkbox" name="compound" value="Gluten"> Gluten<br>
+	 		  <input type="checkbox" name="compound" value="Sugars"> Sugars<br>
+	 		  <input type="checkbox" name="compound" value="Cholesterol"> Cholesterol<br>
+	 		  <input type="checkbox" name="compound" value="Calcium (Ca)"> Calcium (Ca)<br>
+	 		  <input type="checkbox" name="compound" value="Copper (Cu)"> Copper (Cu)<br>
+	 		  <input type="checkbox" name="compound" value="Iron (Fe)"> Iron (Fe)<br>
+	 		  <input type="checkbox" name="compound" value="Sodium (Na)"> Sodium (Na)<br>
+	 		  <input type="checkbox" name="compound" value="Fiber"> Fiber<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin A"> Vitamin A<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin B12"> Vitamin B12<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin B6"> Vitamin B6<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin C"> Vitamin C<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin D"> Vitamin D<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin E"> Vitamin E<br>
+	 		  <input type="checkbox" name="compound" value="Vitamin K"> Vitamin K<br>
+        <br>
+	 		  <button id='applyFilter' style='width:100%'>Filter</button><br>
+        <label>(wait a 5-10seconds to see the result)</label>
+	 		</form> 
+	  </div>
+  </div>	
+</div>
+
+  <h1 class="columnTitle" style="float: center;">Information Visualisation</h1>
+
+  <div id="settings" class='columnNavRadio'>
+    <label>Color Blind Mode: </label>
+    <input type="radio" name="colorBlind" value="true" /> On 
+    <input type="radio" name="colorBlind" value="false" checked/> Off
+    <br>
+    <label>Instructions:     </label>
+    <input type="radio" name="setting" value="true" checked/> Show 
+    <input type="radio" name="setting" value="false"/> Hide 
+  </div>
+</div>
+
+<div id="sequence" class="breadcrumbs" style="float: left;width: 99%;height: 30px"></div>
+
+<div style="height: 80%;float: bottom;">
+  <div id="svg-div" style="width: 70%;float: left;"></div>
+  <div id="sidebar" class='sidebar'>
+    <div id="item_info" class='item_info'>
+      <h2 id="item_name"></h2>
+      <div id="info"></div>
+    </div>
+    <div id="instructionsSideBar" class="legenda">
+      <h2 id="d">Instructions</h2>
+      <p style="text-align: center;"> (hover over the instructions to see them in action)</p>
+      <p id="backInstr">  <b style="font-size: 1.25em;">Back:</b> <i style="font-size: 1.25em;">Click</i> at the center of the Visualisation</p>
+      <p id="selectInstr"><b style="font-size: 1.25em;">Click/See:</b> <i style="font-size: 1.25em;">Hover</i> on the slice of the Visualisation. <i style="font-size: 1.25em;">Click</i> to go through</p>
+      <h2 id="instr" style="text-align: center;">Current Action</h2>
+        <p style="font-size: 1.25em;"> <b>Click: </b><span id="click_action"></span></p>
+        <p style="font-size: 1.25em;"> <b>Hover: </b><span id="hover_action"></span></p>
+      </p>
+    </div>
+  </div>
+</div>
+
+</body>
+<script src="libs/jquery/dist/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="libs/d3/d3.js"></script>
+<script type="text/javascript" src='script.js'></script>
+</html>

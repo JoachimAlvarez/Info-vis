@@ -1,0 +1,13 @@
+{
+  "name": "infovis",
+  "main": "app.js",
+  "author": "Simon Quartier",
+  "dependencies": {
+    "body-parser": "^1.5.2",
+    "connect-timeout": "^1.9.0",
+    "express": "^4.6.1",
+    "express-session": "^1.15.6",
+    "mysql": "^2.16.0",
+    "npm": "^6.5.0"
+  }
+}
